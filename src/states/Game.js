@@ -32,17 +32,34 @@ export default class extends Phaser.State {
 
     this.game.world.setBounds(-640, -640, 1920, 1920);
 
-    for (let row = 0; row < 32; row++) {
-      for (let col = 0; col < 9; col++) {
-        let x = col * 64;
-        const y = row * 16;
-        if (row % 2 === 1) { x += 32; }
-        this.game.add.sprite(x, y, "tile");
+    this.map = [];
+    for (let j = 0; j < 40; j++) {
+      const row = [];
+      for (let i = 0; i < 20; i++) {
+        if (this.game.rnd.frac() < 0.1) {
+          row.push(0);
+        } else {
+          row.push(1);
+        }
+      }
+      this.map.push(row);
+    }
+
+    for (let j = 0; j < this.map.length; j++) {
+      const row = this.map[j];
+      for (let i = 0; i < row.length; i++) {
+        if (row[i] !== 0) {
+          let x = i * 64;
+          const y = j * 16;
+          if (j % 2 === 1) { x += 32; }
+          this.game.add.sprite(x, y, "tile");
+        }
       }
     }
     this.zGroup = this.game.add.group();
     for (let row = 0; row < 32; row++) {
       for (let col = 0; col < 9; col++) {
+        if (this.map[row][col] === 0) { continue; }
         let x = col * 64;
         const y = row * 16;
         if (row % 2 === 1) { x += 32; }
