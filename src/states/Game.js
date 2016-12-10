@@ -81,11 +81,10 @@ export default class extends Phaser.State {
     this.player.addChild(ring);
     const ball = this.player.ball = this.game.add.sprite(0, 0, "ball");
     this.player.addChild(ball);
-    this.zGroup.add(this.player);
-    this.mapZGroup.add(this.player);
     this.player.falling = false;
     this.player.distFallen = 0;
     this.player.fallRate = 0;
+    this.zGroup.add(this.player);
     this.updatePlayerAnchors();
 
     this.shootGraphics = this.game.add.graphics(0, 0);
@@ -308,6 +307,7 @@ export default class extends Phaser.State {
         tileX < 0 || tileX >= this.map[tileY] ||
         this.map[tileY][tileX] === 0) {
       this.player.falling = true;
+      this.mapZGroup.add(this.player);
       this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
     }
   }
