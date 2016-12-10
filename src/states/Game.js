@@ -28,6 +28,7 @@ export default class extends Phaser.State {
     this.lastShotDx = 0;
     this.lastShotDy = 0;
 
+    this.aloneCutoff = 160;
     this.darknessMaxDist = 240;
     this.darknessMinDist = 40;
     this.treeRadius = 6;
@@ -95,6 +96,21 @@ export default class extends Phaser.State {
     this.darkBorder.fixedToCamera = true;
     this.darkBorder.alpha = 0;
 
+    this.score = 0;
+
+    this.scoreLabel = this.game.add.text(
+      320, 16, "Alone time: ", {fill: "white", size: "64px", align: "right"}
+    );
+    this.scoreLabel.anchor.set(1, 0);
+    this.scoreLabel.setShadow(2, 2, 'rgba(0,0,0,0.5)', 5);
+    this.scoreLabel.fixedToCamera = true;
+
+    this.scoreText = this.game.add.text(
+      320, 16, "0", {fill: "white", size: "64px"}
+    );
+    this.scoreText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 5);
+    this.scoreText.fixedToCamera = true;
+
     this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
     this.game.input.gamepad.start();
@@ -108,6 +124,7 @@ export default class extends Phaser.State {
     this.processPlayerFall();
     this.spawnEnemies();
     this.processEnemies();
+    this.updateScore();
     this.updateDarkness();
     this.updateShootGraphics();
 
@@ -389,19 +406,17 @@ export default class extends Phaser.State {
     ball.anchor.setTo(32 / ball.width, 64 / ball.height - fallen);
   }
 
-  updateDarkness () {
-    const player = this.player;
-    let distSquared = 1000 * 1000;
-    for (const enemy of this.enemies) {
-      const dx = enemy.x - player.x;
-      const dy = enemy.y - player.y;
-      const enemyDistSquared = dx * dx + dy * dy;
-      if (enemyDistSquared < distSquared) {
-        distSquared = enemyDistSquared;
-      }
+  updateScore() {
+    const dist = this.distToNearestEnemy();
+    if (dist > this.aloneCutoff) {
+      this.score += 1/60;
     }
+    this.scoreText.text = `${this.score.toFixed(0)}`;
+  }
+
+  updateDarkness () {
+    const dist = this.distToNearestEnemy();
     let targetAlpha = 0.1;
-    const dist = Math.sqrt(distSquared);
     if (dist < this.darknessMaxDist) {
       if (dist <= this.darknessMinDist) {
         targetAlpha = 1;
@@ -417,5 +432,20 @@ export default class extends Phaser.State {
     } else {
       this.darkBorder.alpha = targetAlpha;
     }
+  }
+
+  distToNearestEnemy() {
+    const player = this.player;
+    let distSquared = 1000 * 1000;
+    for (const enemy of this.enemies) {
+      const dx = enemy.x - player.x;
+      const dy = enemy.y - player.y;
+      const enemyDistSquared = dx * dx + dy * dy;
+      if (enemyDistSquared < distSquared) {
+        distSquared = enemyDistSquared;
+      }
+    }
+    const dist = Math.sqrt(distSquared);
+    return dist;
   }
 }
