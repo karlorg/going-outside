@@ -107,6 +107,7 @@ export default class extends Phaser.State {
     this.movePlayer();
     this.processShoot();
     this.collidePlayerTrees();
+    this.checkPlayerFall();
     this.updateDarkness();
     this.updateShootGraphics();
 
@@ -115,8 +116,8 @@ export default class extends Phaser.State {
 
   render () {
     if (__DEV__) {
-      // this.game.debug.geom(this.debugRect, "red");
-      // this.game.debug.geom(this.debugLine, "yellow");
+      // this.game.debug.geom(
+      //   new Phaser.Point(this.debugX, this.debugY), "red");
     }
   }
 
@@ -246,6 +247,36 @@ export default class extends Phaser.State {
         player.y = tree.y - minDist * Math.sin(angle);
       }
     }
+  }
+
+  checkPlayerFall () {
+    const player = this.player;
+    // find nearest point on 64x32 grid to player position
+    const roundX = 64 * Math.round(player.x / 64);
+    const roundY = 32 * Math.round(player.y / 32);
+    // enumerate the centers of that tile and its neighbours
+    const candidates = [
+      { x: roundX, y: roundY },
+      { x: roundX + 32, y: roundY - 16 },
+      { x: roundX + 32, y: roundY + 16 },
+      { x: roundX - 32, y: roundY - 16 },
+      { x: roundX - 32, y: roundY - 16 }
+    ];
+    let nearestX = 0;
+    let nearestY = 0;
+    let nearestDistSq = 1000 * 1000;
+    for (const {x, y} of candidates) {
+      const dx = player.x - x;
+      const dy = player.y - y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < nearestDistSq) {
+        nearestX = x;
+        nearestY = y;
+        nearestDistSq = distSq;
+      }
+    }
+    this.debugX = nearestX;
+    this.debugY = nearestY;
   }
 
   updateDarkness () {
