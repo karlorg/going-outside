@@ -14,6 +14,8 @@ export default class extends Phaser.State {
     this.playerSpeed = 80;  // pix/sec
     this.playerRadius = 10;  // for collision
     this.playerHeight = 36;  // for visuals
+    this.playerMaxFallRate = 160;  // pix/sec
+    this.playerFallAccel = 160; // pix/sec/sec
 
     this.shootRange = 160;
     this.shotFadeTime = 1;  // sec
@@ -45,14 +47,17 @@ export default class extends Phaser.State {
       this.map.push(row);
     }
 
+    this.mapZGroup = this.game.add.group();
     for (let j = 0; j < this.map.length; j++) {
       const row = this.map[j];
       for (let i = 0; i < row.length; i++) {
         if (row[i] !== 0) {
-          let x = i * 64;
-          const y = j * 16;
+          let x = i * 64 + 32;
+          const y = j * 16 + 16;
           if (j % 2 === 1) { x += 32; }
-          this.game.add.sprite(x, y, "tile");
+          const tile = this.game.add.sprite(x, y, "tile");
+          tile.anchor.setTo(0.5, 0.25);
+          this.mapZGroup.add(tile);
         }
       }
     }
@@ -84,13 +89,16 @@ export default class extends Phaser.State {
 
     // create player
     this.player = this.game.add.sprite(320, 320);
-    const ring = this.game.add.sprite(0, 0, "ring");
+    const ring = this.player.ring = this.game.add.sprite(0, 0, "ring");
     this.player.addChild(ring);
-    ring.anchor.setTo(32 / ring.width, 64 / ring.height);
-    const ball = this.game.add.sprite(0, 0, "ball");
+    const ball = this.player.ball = this.game.add.sprite(0, 0, "ball");
     this.player.addChild(ball);
-    ball.anchor.setTo(32 / ball.width, 64 / ball.height);
     this.zGroup.add(this.player);
+    this.mapZGroup.add(this.player);
+    this.player.falling = false;
+    this.player.distFallen = 0;
+    this.player.fallRate = 0;
+    this.updatePlayerAnchors();
 
     this.shootGraphics = this.game.add.graphics(0, 0);
 
@@ -108,6 +116,7 @@ export default class extends Phaser.State {
     this.processShoot();
     this.collidePlayerTrees();
     this.checkPlayerFall();
+    this.processPlayerFall();
     this.updateDarkness();
     this.updateShootGraphics();
 
@@ -122,6 +131,7 @@ export default class extends Phaser.State {
   }
 
   movePlayer () {
+    if (this.player.falling) { return; }
     const pad = this.game.input.gamepad.pad1;
     const keyb = this.game.input.keyboard;
     let targetX = 0;
@@ -275,8 +285,34 @@ export default class extends Phaser.State {
         nearestDistSq = distSq;
       }
     }
-    this.debugX = nearestX;
-    this.debugY = nearestY;
+
+    const tileY = Math.round((nearestY - 16) / 16);
+    const tileX = Math.floor((nearestX - 16) / 64);
+    if (tileY < 0 || tileY >= this.map.length ||
+        tileX < 0 || tileX >= this.map[tileY] ||
+        this.map[tileY][tileX] === 0) {
+      this.player.falling = true;
+      this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
+    }
+  }
+
+  processPlayerFall() {
+    if (!this.player.falling) { return; }
+    this.player.fallRate += 0.06;  // hack fix, accel didn't work
+    if (this.player.fallRate > this.playerMaxFallRate) {
+      this.player.fallRate = this.playerMaxFallRate;
+    }
+    this.player.distFallen += this.player.fallRate / 60;
+    this.updatePlayerAnchors();
+  }
+
+  updatePlayerAnchors() {
+    // set the anchors of the player's sub-sprites including offset to
+    // represent falling off the world
+    const {ball, ring} = this.player;
+    const fallen = this.player.distFallen;
+    ring.anchor.setTo(32 / ring.width, 64 / ring.height - fallen);
+    ball.anchor.setTo(32 / ball.width, 64 / ball.height - fallen);
   }
 
   updateDarkness () {
