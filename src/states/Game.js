@@ -60,6 +60,7 @@ export default class extends Phaser.State {
     // spawn enemies
     {
       const enemy = this.game.add.sprite(160, 160, "ball");
+      enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
       this.zGroup.add(enemy);
       this.enemies.push(enemy);
     }
@@ -97,7 +98,8 @@ export default class extends Phaser.State {
 
   render () {
     if (__DEV__) {
-    //   this.game.debug.spriteInfo(this.mushroom, 32, 32);
+      // this.game.debug.geom(this.debugRect, "red");
+      // this.game.debug.geom(this.debugLine, "yellow");
     }
   }
 
@@ -171,13 +173,32 @@ export default class extends Phaser.State {
     const vecx = this.shootRange * Math.cos(angle);
     const vecy = this.shootRange * Math.sin(angle);
     const sx = player.x;
-    const sy = player.y - this.playerHeight / 2;
+    const sy = player.y;
     const dx = sx + vecx;
     const dy = sy + vecy;
+
+    // set properties used for graphical representation
     this.lastShotSx = sx;
     this.lastShotSy = sy;
     this.lastShotDx = dx;
     this.lastShotDy = dy;
+
+    // see if anything was shot
+    //
+    // hack: intersections don't work with vertical and horizontal lines, so
+    // offset one endpoint slightly for those cases
+    const shotLine = new Phaser.Line(sx, sy,
+                                     dx === sx ? dx+1 : dx,
+                                     dy === sy ? dy+1 : dy);
+    for (const enemy of this.enemies) {
+      const rect = new Phaser.Rectangle(
+        enemy.x - this.playerRadius, enemy.y - this.playerRadius,
+        2 * this.playerRadius, 2 * this.playerRadius
+      );
+      if (Phaser.Line.intersectsRectangle(shotLine, rect)) {
+        this.game.camera.flash(0xff0000, 100);
+      }
+    }
   }
 
   updateShootGraphics () {
@@ -188,8 +209,10 @@ export default class extends Phaser.State {
       1 - ((now - this.lastShotTime) / this.shotFadeTime),
       0);
     g.lineStyle(2, 0xffffff, alpha);
-    g.moveTo(this.lastShotSx, this.lastShotSy);
-    g.lineTo(this.lastShotDx, this.lastShotDy);
+    // (sx, sy) and (dx, dy) are in ground coords, need to move them up a
+    // bit to look right graphically
+    g.moveTo(this.lastShotSx, this.lastShotSy - this.playerHeight / 2);
+    g.lineTo(this.lastShotDx, this.lastShotDy - this.playerHeight / 2);
   }
 
   collidePlayerTrees () {
