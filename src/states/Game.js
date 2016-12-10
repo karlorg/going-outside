@@ -17,7 +17,7 @@ export default class extends Phaser.State {
     this.playerMaxFallRate = 160;  // pix/sec
     this.playerFallAccel = 160; // pix/sec/sec
 
-    this.enemyWalkSpeed = 240;  // pix/sec
+    this.enemyWalkSpeed = 40;  // pix/sec
 
     this.shootRange = 160;
     this.shotFadeTime = 1;  // sec
@@ -29,7 +29,7 @@ export default class extends Phaser.State {
     this.lastShotDy = 0;
 
     this.darknessMaxDist = 240;
-    this.darknessMinDist = 160;
+    this.darknessMinDist = 40;
     this.treeRadius = 6;
     this.trees = [];
     this.enemies = [];
@@ -209,14 +209,25 @@ export default class extends Phaser.State {
     const shotLine = new Phaser.Line(sx, sy,
                                      dx === sx ? dx+1 : dx,
                                      dy === sy ? dy+1 : dy);
-    for (const enemy of this.enemies) {
+    const deadEnemyIndices = [];
+    for (let i=0; i < this.enemies.length; i++) {
+      const enemy = this.enemies[i];
       const rect = new Phaser.Rectangle(
         enemy.x - this.playerRadius, enemy.y - this.playerRadius,
         2 * this.playerRadius, 2 * this.playerRadius
       );
       if (Phaser.Line.intersectsRectangle(shotLine, rect)) {
         this.game.camera.flash(0xff0000, 100);
+        enemy.health -= 50;
+        if (enemy.health <= 0) {
+          enemy.destroy();
+          deadEnemyIndices.push(i);
+        }
       }
+    }
+    for (let i=deadEnemyIndices.length - 1; i >= 0; i--) {
+      const deadEnemyIndex = deadEnemyIndices[i];
+      this.enemies.splice(deadEnemyIndex, 1);
     }
   }
 
@@ -252,7 +263,7 @@ export default class extends Phaser.State {
 
   spawnEnemies() {
     const rnd = this.game.rnd;
-    const spawnRate = 15;  // enemies/second
+    const spawnRate = 0.5;  // enemies/second
     if (rnd.frac() < spawnRate / 60) {
       const mainAxis = rnd.between(0, 1);
       let tileX = 0;
@@ -273,6 +284,7 @@ export default class extends Phaser.State {
   makeAndAddEnemy(x, y) {
     const enemy = this.game.add.sprite(x, y, "ball");
     enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
+    enemy.health = 100;
     this.pickDestination(enemy);
     this.zGroup.add(enemy);
     this.enemies.push(enemy);
@@ -388,16 +400,22 @@ export default class extends Phaser.State {
         distSquared = enemyDistSquared;
       }
     }
-    let alpha = 0;
+    let targetAlpha = 0.1;
     const dist = Math.sqrt(distSquared);
     if (dist < this.darknessMaxDist) {
       if (dist <= this.darknessMinDist) {
-        alpha = 1;
+        targetAlpha = 1;
       } else {
-        alpha = 1 - ((dist - this.darknessMinDist) /
-                     (this.darknessMaxDist - this.darknessMinDist));
+        targetAlpha = 1 - (((dist - this.darknessMinDist) /
+                            (this.darknessMaxDist - this.darknessMinDist)) *
+                           0.9);
       }
     }
-    this.darkBorder.alpha = alpha;
+    const diff = targetAlpha - this.darkBorder.alpha;
+    if (Math.abs(diff) > 1/60) {
+      this.darkBorder.alpha += (diff/Math.abs(diff)) * 1/60;
+    } else {
+      this.darkBorder.alpha = targetAlpha;
+    }
   }
 }
