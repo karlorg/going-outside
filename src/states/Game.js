@@ -18,6 +18,8 @@ export default class extends Phaser.State {
     this.trees = [];
     this.enemies = [];
 
+    this.game.world.setBounds(-640, -640, 1920, 1920);
+
     for (let row = 0; row < 32; row++) {
       for (let col = 0; col < 9; col++) {
         let x = col * 64;
@@ -46,6 +48,7 @@ export default class extends Phaser.State {
     // spawn enemies
     {
       const enemy = this.game.add.sprite(160, 160, "ball");
+      this.zGroup.add(enemy);
       this.enemies.push(enemy);
     }
 
@@ -62,6 +65,8 @@ export default class extends Phaser.State {
     this.darkBorder = this.game.add.sprite(0, 0, "dark-border");
     this.darkBorder.fixedToCamera = true;
     this.darkBorder.alpha = 0;
+
+    this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
     this.game.input.gamepad.start();
   }
