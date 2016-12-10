@@ -291,18 +291,32 @@ export default class extends Phaser.State {
   }
 
   pickOffsetDestination(enemy) {
-    enemy.destination.x += this.game.rnd.between(-128, 128);
-    enemy.destination.y += this.game.rnd.between(-64, 64);
+    enemy.offsetDestination = {
+      x: enemy.destination.x + this.game.rnd.between(-128, 128),
+      y: enemy.destination.y + this.game.rnd.between(-64, 64)
+    };
   }
 
   processEnemies() {
     for (const enemy of this.enemies) {
-      const dest = enemy.destination;
+      const dest = enemy.offsetDestination;
       const dirx = dest.x - enemy.x;
       const diry = dest.y - enemy.y;
-      const angle = Math.atan2(diry, dirx);
-      enemy.x += this.enemyWalkSpeed * Math.cos(angle) / 60;
-      enemy.y += this.enemyWalkSpeed * Math.sin(angle) / 60;
+      if (dirx * dirx + diry * diry > 20 * 20) {
+        const angle = Math.atan2(diry, dirx);
+        enemy.x += this.enemyWalkSpeed * Math.cos(angle) / 60;
+        enemy.y += this.enemyWalkSpeed * Math.sin(angle) / 60;
+      } else {
+        if (!enemy.arrived) {
+          enemy.arrived = true;
+          enemy.dawdleNextTime =
+            this.game.time.totalElapsedSeconds() + this.game.rnd.between(0, 6);
+        } else if (this.game.time.totalElapsedSeconds() >
+                   enemy.dawdleNextTime) {
+          this.pickOffsetDestination(enemy);
+          enemy.arrived = false;
+        }
+      }
     }
   }
 
