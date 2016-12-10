@@ -17,6 +17,8 @@ export default class extends Phaser.State {
     this.playerMaxFallRate = 160;  // pix/sec
     this.playerFallAccel = 160; // pix/sec/sec
 
+    this.enemyWalkSpeed = 240;  // pix/sec
+
     this.shootRange = 160;
     this.shotFadeTime = 1;  // sec
     this.lastShotTime = 0;
@@ -102,9 +104,10 @@ export default class extends Phaser.State {
     this.movePlayer();
     this.processShoot();
     this.collidePlayerTrees();
-    this.spawnEnemies();
     this.checkPlayerFall();
     this.processPlayerFall();
+    this.spawnEnemies();
+    this.processEnemies();
     this.updateDarkness();
     this.updateShootGraphics();
 
@@ -249,7 +252,7 @@ export default class extends Phaser.State {
 
   spawnEnemies() {
     const rnd = this.game.rnd;
-    const spawnRate = 5;  // enemies/second
+    const spawnRate = 15;  // enemies/second
     if (rnd.frac() < spawnRate / 60) {
       const mainAxis = rnd.between(0, 1);
       let tileX = 0;
@@ -270,8 +273,37 @@ export default class extends Phaser.State {
   makeAndAddEnemy(x, y) {
     const enemy = this.game.add.sprite(x, y, "ball");
     enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
+    this.pickDestination(enemy);
     this.zGroup.add(enemy);
     this.enemies.push(enemy);
+  }
+
+  pickDestination(enemy) {
+    const options = [];
+    for (let j = 7; j < this.map.length - 2; j += 15) {
+      for (let i = 3; i < this.map[0].length - 2; i += 6) {
+        options.push([i, j]);
+      }
+    }
+    const [x, y] = this.game.rnd.pick(options);
+    enemy.destination = {x: x * 64, y: y * 16};
+    this.pickOffsetDestination(enemy);
+  }
+
+  pickOffsetDestination(enemy) {
+    enemy.destination.x += this.game.rnd.between(-128, 128);
+    enemy.destination.y += this.game.rnd.between(-64, 64);
+  }
+
+  processEnemies() {
+    for (const enemy of this.enemies) {
+      const dest = enemy.destination;
+      const dirx = dest.x - enemy.x;
+      const diry = dest.y - enemy.y;
+      const angle = Math.atan2(diry, dirx);
+      enemy.x += this.enemyWalkSpeed * Math.cos(angle) / 60;
+      enemy.y += this.enemyWalkSpeed * Math.sin(angle) / 60;
+    }
   }
 
   checkPlayerFall () {
