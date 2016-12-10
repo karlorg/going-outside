@@ -32,17 +32,13 @@ export default class extends Phaser.State {
     this.trees = [];
     this.enemies = [];
 
-    this.game.world.setBounds(-640, -640, 1920, 1920);
+    this.game.world.setBounds(-640, -640, 2560, 2560);
 
     this.map = [];
     for (let j = 0; j < 40; j++) {
       const row = [];
       for (let i = 0; i < 20; i++) {
-        if (this.game.rnd.frac() < 0.1) {
-          row.push(0);
-        } else {
-          row.push(1);
-        }
+        row.push(1);
       }
       this.map.push(row);
     }
@@ -79,14 +75,6 @@ export default class extends Phaser.State {
       }
     }
 
-    // spawn enemies
-    {
-      const enemy = this.game.add.sprite(160, 160, "ball");
-      enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
-      this.zGroup.add(enemy);
-      this.enemies.push(enemy);
-    }
-
     // create player
     this.player = this.game.add.sprite(320, 320);
     const ring = this.player.ring = this.game.add.sprite(0, 0, "ring");
@@ -115,6 +103,7 @@ export default class extends Phaser.State {
     this.movePlayer();
     this.processShoot();
     this.collidePlayerTrees();
+    this.spawnEnemies();
     this.checkPlayerFall();
     this.processPlayerFall();
     this.updateDarkness();
@@ -257,6 +246,33 @@ export default class extends Phaser.State {
         player.y = tree.y - minDist * Math.sin(angle);
       }
     }
+  }
+
+  spawnEnemies() {
+    const rnd = this.game.rnd;
+    const spawnRate = 5;  // enemies/second
+    if (rnd.frac() < spawnRate / 60) {
+      const mainAxis = rnd.between(0, 1);
+      let tileX = 0;
+      let tileY = 0;
+      if (mainAxis === 0) {
+        tileX = rnd.between(0, this.map[0].length - 1);
+        tileY = rnd.pick([0, this.map.length - 1]);
+      } else {
+        tileY = rnd.between(0, this.map.length - 1);
+        tileX = rnd.pick([0, this.map[0].length - 1]);
+      }
+      this.makeAndAddEnemy(
+        tileX * 64 + 32 + (tileY % 2 === 1 ? 32 : 0),
+        tileY * 16 + 16);
+    }
+  }
+
+  makeAndAddEnemy(x, y) {
+    const enemy = this.game.add.sprite(x, y, "ball");
+    enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
+    this.zGroup.add(enemy);
+    this.enemies.push(enemy);
   }
 
   checkPlayerFall () {
