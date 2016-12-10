@@ -17,6 +17,8 @@ export default class extends Phaser.State {
     //
     this.load.image('tile', 'assets/images/tile.png');
     this.load.image('ball', 'assets/images/ball.png');
+    this.load.image('ring', 'assets/images/ring.png');
+    this.load.image('dark-border', 'assets/images/dark-border.png');
     this.load.image('palm01', 'assets/images/isometric trees/palm01.png');
     this.load.image('palm02', 'assets/images/isometric trees/palm02.png');
     this.load.image('palm03', 'assets/images/isometric trees/palm03.png');

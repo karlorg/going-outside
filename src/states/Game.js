@@ -8,10 +8,15 @@ export default class extends Phaser.State {
   create () {
     // this.palms = ["palm01", "palm02", "palm03", "palm04", "palm05", "palm06"];
 
+    this.stage.backgroundColor = '#000000';
+
     this.playerSpeed = 80;  // pix/sec
     this.playerRadius = 10;
+    this.darknessMaxDist = 240;
+    this.darknessMinDist = 160;
     this.treeRadius = 6;
     this.trees = [];
+    this.enemies = [];
 
     for (let row = 0; row < 32; row++) {
       for (let col = 0; col < 9; col++) {
@@ -37,9 +42,26 @@ export default class extends Phaser.State {
         }
       }
     }
-    this.player = this.game.add.sprite(320, 320, "ball");
-    this.player.anchor.setTo(32 / this.player.width, 64 / this.player.height);
+
+    // spawn enemies
+    {
+      const enemy = this.game.add.sprite(160, 160, "ball");
+      this.enemies.push(enemy);
+    }
+
+    // create player
+    this.player = this.game.add.sprite(320, 320);
+    const ring = this.game.add.sprite(0, 0, "ring");
+    this.player.addChild(ring);
+    ring.anchor.setTo(32 / ring.width, 64 / ring.height);
+    const ball = this.game.add.sprite(0, 0, "ball");
+    this.player.addChild(ball);
+    ball.anchor.setTo(32 / ball.width, 64 / ball.height);
     this.zGroup.add(this.player);
+
+    this.darkBorder = this.game.add.sprite(0, 0, "dark-border");
+    this.darkBorder.fixedToCamera = true;
+    this.darkBorder.alpha = 0;
 
     this.game.input.gamepad.start();
   }
@@ -73,6 +95,7 @@ export default class extends Phaser.State {
     this.player.y += targetY * this.playerSpeed / 60;
 
     this.collidePlayerTrees();
+    this.updateDarkness();
 
     this.zGroup.sort('y', Phaser.Group.SORT_ASCENDING);
   }
@@ -97,5 +120,29 @@ export default class extends Phaser.State {
         player.y = tree.y - minDist * Math.sin(angle);
       }
     }
+  }
+
+  updateDarkness () {
+    const player = this.player;
+    let distSquared = 1000 * 1000;
+    for (const enemy of this.enemies) {
+      const dx = enemy.x - player.x;
+      const dy = enemy.y - player.y;
+      const enemyDistSquared = dx * dx + dy * dy;
+      if (enemyDistSquared < distSquared) {
+        distSquared = enemyDistSquared;
+      }
+    }
+    let alpha = 0;
+    const dist = Math.sqrt(distSquared);
+    if (dist < this.darknessMaxDist) {
+      if (dist <= this.darknessMinDist) {
+        alpha = 1;
+      } else {
+        alpha = 1 - ((dist - this.darknessMinDist) /
+                     (this.darknessMaxDist - this.darknessMinDist));
+      }
+    }
+    this.darkBorder.alpha = alpha;
   }
 }
