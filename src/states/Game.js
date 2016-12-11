@@ -51,6 +51,7 @@ export default class extends Phaser.State {
         tile.anchor.setTo(0.5, 0.25);
         tile.lastCracked = this.game.time.totalElapsedSeconds();
         tile.crackLevel = 0;
+        tile.crackSprites = [];
         this.mapZGroup.add(tile);
         row.push(tile);
       }
@@ -498,7 +499,15 @@ export default class extends Phaser.State {
         tile.x, tile.y + 1, `crack${tile.crackLevel}`
       );
       crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
+      tile.crackSprites.push(crack);
       this.mapZGroup.add(crack);
+    } else {
+      tile.destroy();
+      for (const crack of tile.crackSprites) {
+        crack.destroy();
+      }
+      const {x: tx, y: ty} = this.nearestTileTo(tile.x, tile.y);
+      this.map[ty][tx] = null;
     }
   }
 
