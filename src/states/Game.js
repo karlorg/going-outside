@@ -31,6 +31,8 @@ export default class extends Phaser.State {
     this.aloneCutoff = 160;
     this.darknessMaxDist = 240;
     this.darknessMinDist = 40;
+
+    this.tileMaxCrackLevel = 3;
     this.treeRadius = 6;
     this.trees = [];
     this.enemies = [];
@@ -38,32 +40,27 @@ export default class extends Phaser.State {
     this.game.world.setBounds(-640, -640, 2560, 2560);
 
     this.map = [];
+    this.mapZGroup = this.game.add.group();
     for (let j = 0; j < 40; j++) {
       const row = [];
       for (let i = 0; i < 20; i++) {
-        row.push(1);
+        let x = i * 64 + 32;
+        const y = j * 16 + 16;
+        if (j % 2 === 1) { x += 32; }
+        const tile = this.game.add.sprite(x, y, "tile");
+        tile.anchor.setTo(0.5, 0.25);
+        // tile.addChild(this.game.add.sprite(0, 0, "tile"));
+        tile.crackLevel = 0;
+        this.mapZGroup.add(tile);
+        row.push(tile);
       }
       this.map.push(row);
     }
 
-    this.mapZGroup = this.game.add.group();
-    for (let j = 0; j < this.map.length; j++) {
-      const row = this.map[j];
-      for (let i = 0; i < row.length; i++) {
-        if (row[i] !== 0) {
-          let x = i * 64 + 32;
-          const y = j * 16 + 16;
-          if (j % 2 === 1) { x += 32; }
-          const tile = this.game.add.sprite(x, y, "tile");
-          tile.anchor.setTo(0.5, 0.25);
-          this.mapZGroup.add(tile);
-        }
-      }
-    }
     this.zGroup = this.game.add.group();
     for (let row = 0; row < 32; row++) {
       for (let col = 0; col < 9; col++) {
-        if (this.map[row][col] === 0) { continue; }
+        if (this.map[row][col] === null) { continue; }
         let x = col * 64;
         const y = row * 16;
         if (row % 2 === 1) { x += 32; }
@@ -126,6 +123,7 @@ export default class extends Phaser.State {
     this.processEnemies();
     this.updateScore();
     this.updateDarkness();
+    this.crackTiles();
     this.updateShootGraphics();
 
     this.zGroup.sort('y', Phaser.Group.SORT_ASCENDING);
@@ -379,8 +377,8 @@ export default class extends Phaser.State {
     const tileY = Math.round((nearestY - 16) / 16);
     const tileX = Math.floor((nearestX - 16) / 64);
     if (tileY < 0 || tileY >= this.map.length ||
-        tileX < 0 || tileX >= this.map[tileY] ||
-        this.map[tileY][tileX] === 0) {
+        tileX < 0 || tileX >= this.map[tileY].length ||
+        this.map[tileY][tileX] === null) {
       this.player.falling = true;
       this.mapZGroup.add(this.player);
       this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
@@ -407,11 +405,12 @@ export default class extends Phaser.State {
   }
 
   updateScore() {
+    if (this.player.falling) { return; }
     const dist = this.distToNearestEnemy();
     if (dist > this.aloneCutoff) {
       this.score += 1/60;
     }
-    this.scoreText.text = `${this.score.toFixed(0)}`;
+    this.scoreText.text = `${Math.floor(this.score)}`;
   }
 
   updateDarkness () {
@@ -447,5 +446,25 @@ export default class extends Phaser.State {
     }
     const dist = Math.sqrt(distSquared);
     return dist;
+  }
+
+  crackTiles() {
+    for (const row of this.map) {
+      for (let i=0; i < row.length; i++) {
+        const tile = row[i];
+        if (tile === null) { continue; }
+        if (this.game.rnd.frac() < 0.1 / 60) {
+          if (tile.crackLevel < this.tileMaxCrackLevel) {
+            tile.crackLevel += 1;
+            // (tile.y+1) is a hack to make z-sorting mostly work
+            const crack = this.game.add.sprite(
+              tile.x, tile.y + 1, `crack${tile.crackLevel}`
+            );
+            crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
+            this.mapZGroup.add(crack);
+          }
+        }
+      }
+    }
   }
 }
