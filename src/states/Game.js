@@ -349,9 +349,20 @@ export default class extends Phaser.State {
 
   checkPlayerFall () {
     const player = this.player;
+    const {x: tileX, y: tileY} = this.nearestTileTo(player.x, player.y);
+    if (tileY < 0 || tileY >= this.map.length ||
+        tileX < 0 || tileX >= this.map[tileY].length ||
+        this.map[tileY][tileX] === null) {
+      this.player.falling = true;
+      this.mapZGroup.add(this.player);
+      this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
+    }
+  }
+
+  nearestTileTo(x, y) {
     // find nearest point on 64x32 grid to player position
-    const roundX = 64 * Math.round(player.x / 64);
-    const roundY = 32 * Math.round(player.y / 32);
+    const roundX = 64 * Math.round(x / 64);
+    const roundY = 32 * Math.round(y / 32);
     // enumerate the centers of that tile and its neighbours
     const candidates = [
       { x: roundX, y: roundY },
@@ -363,9 +374,9 @@ export default class extends Phaser.State {
     let nearestX = 0;
     let nearestY = 0;
     let nearestDistSq = 1000 * 1000;
-    for (const {x, y} of candidates) {
-      const dx = player.x - x;
-      const dy = player.y - y;
+    for (const {x: cx, y: cy} of candidates) {
+      const dx = x - cx;
+      const dy = y - cy;
       const distSq = dx * dx + dy * dy;
       if (distSq < nearestDistSq) {
         nearestX = x;
@@ -376,13 +387,7 @@ export default class extends Phaser.State {
 
     const tileY = Math.round((nearestY - 16) / 16);
     const tileX = Math.floor((nearestX - 16) / 64);
-    if (tileY < 0 || tileY >= this.map.length ||
-        tileX < 0 || tileX >= this.map[tileY].length ||
-        this.map[tileY][tileX] === null) {
-      this.player.falling = true;
-      this.mapZGroup.add(this.player);
-      this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
-    }
+    return {x: tileX, y: tileY};
   }
 
   processPlayerFall() {
