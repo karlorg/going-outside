@@ -453,21 +453,35 @@ export default class extends Phaser.State {
     return dist;
   }
 
+  neighboursOf({x, y}) {
+    return [
+      {x, y},
+      {x: x+1, y}, {x: x-1, y},
+      {x, y: y-2}, {x, y: y+2}
+    ].filter(({x, y}) => {
+      return (
+        (y >= 0) && (y < this.map.length) &&
+        (x >= 0) && (x < this.map[0].length)
+      );
+    });
+  }
+
   crackTiles() {
-    for (const row of this.map) {
-      for (let i=0; i < row.length; i++) {
-        const tile = row[i];
-        if (tile === null) { continue; }
-        if (this.game.rnd.frac() < 0.1 / 60) {
-          if (tile.crackLevel < this.tileMaxCrackLevel) {
-            tile.crackLevel += 1;
-            // (tile.y+1) is a hack to make z-sorting mostly work
-            const crack = this.game.add.sprite(
-              tile.x, tile.y + 1, `crack${tile.crackLevel}`
-            );
-            crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
-            this.mapZGroup.add(crack);
-          }
+    const {x: nx, y: ny} =
+      this.nearestTileTo(this.player.x, this.player.y);
+    const candidates = this.neighboursOf({x: nx, y: ny});
+    for (const {x, y} of candidates) {
+      const tile = this.map[y][x];
+      if (tile === null) { continue; }
+      if (this.game.rnd.frac() < 0.1 / 60) {
+        if (tile.crackLevel < this.tileMaxCrackLevel) {
+          tile.crackLevel += 1;
+          // (tile.y+1) is a hack to make z-sorting mostly work
+          const crack = this.game.add.sprite(
+            tile.x, tile.y + 1, `crack${tile.crackLevel}`
+          );
+          crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
+          this.mapZGroup.add(crack);
         }
       }
     }
