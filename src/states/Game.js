@@ -49,7 +49,7 @@ export default class extends Phaser.State {
         if (j % 2 === 1) { x += 32; }
         const tile = this.game.add.sprite(x, y, "tile");
         tile.anchor.setTo(0.5, 0.25);
-        // tile.addChild(this.game.add.sprite(0, 0, "tile"));
+        tile.lastCracked = this.game.time.totalElapsedSeconds();
         tile.crackLevel = 0;
         this.mapZGroup.add(tile);
         row.push(tile);
@@ -473,12 +473,15 @@ export default class extends Phaser.State {
     for (const {x, y} of candidates) {
       const tile = this.map[y][x];
       if (tile === null) { continue; }
+      if (
+        this.game.time.totalElapsedSeconds() < tile.lastCracked + 1
+      ) { continue; }
       const dist = this.distToNearestEnemy();
       const crackChance = (
         dist > this.darknessMaxDist * 0.8  ? 0 :
         dist > this.darknessMaxDist * 0.6  ? 0.1 / 60 :
         dist > this.darknessMaxDist * 0.4  ? 0.3 / 60 :
-                                             0.6 / 60
+                                             0.7 / 60
       );
       if (this.game.rnd.frac() < crackChance) {
         this.crackTile(tile);
@@ -489,6 +492,7 @@ export default class extends Phaser.State {
   crackTile(tile) {
     if (tile.crackLevel < this.tileMaxCrackLevel) {
       tile.crackLevel += 1;
+      tile.lastCracked = this.game.time.totalElapsedSeconds();
       // (tile.y+1) is a hack to make z-sorting mostly work
       const crack = this.game.add.sprite(
         tile.x, tile.y + 1, `crack${tile.crackLevel}`
