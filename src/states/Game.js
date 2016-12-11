@@ -9,6 +9,27 @@ export default class extends Phaser.State {
     // this.palms = ["palm01", "palm02", "palm03",
     //               "palm04", "palm05", "palm06"];
 
+    this.calmMusic = this.game.add.audio('calm music');
+    this.calmVolume = 0.1;
+    this.calmMusic.onDecoded.add(() => {
+      this.calmMusic.play('', 0, 0, true);
+      this.calmMusic.fadeTo(1000, this.calmVolume);
+    });
+
+    this.annoyingHum = this.game.add.audio('annoying hum');
+    this.annoyingHumVolume = 0.1;
+    this.annoyingHum.onDecoded.add(() => {
+      this.annoyingHum.play('', 0, 0, true);
+    });
+
+    this.chatter = this.game.add.audio('chatter');
+    this.chatterVolume = 0.1;
+    this.chatter.onDecoded.add(() => {
+      this.chatter.play('', 0, 0, true);
+    });
+
+    this.footstepsSound = this.game.add.audio('footsteps');
+
     this.stage.backgroundColor = '#000000';
 
     this.playerSpeed = 80;  // pix/sec
@@ -197,8 +218,12 @@ export default class extends Phaser.State {
       this.player.x += dx;
       this.player.y += dy;
       this.setWalkAnim(this.player.animObj, moveAngle, true);
+      if (!this.footstepsSound.isPlaying) {
+        this.footstepsSound.play('', 0, 0.1, true);
+      }
     } else {  // not moving
       this.setWalkAnim(this.player.animObj, 0, false);
+      this.footstepsSound.stop();
     }
   }
 
@@ -507,11 +532,17 @@ export default class extends Phaser.State {
       }
     }
     const diff = targetAlpha - this.darkBorder.alpha;
+    let actualAlpha = this.darkBorder.alpha;
     if (Math.abs(diff) > 1/60) {
-      this.darkBorder.alpha += (diff/Math.abs(diff)) * 1/60;
+      actualAlpha += (diff/Math.abs(diff)) * 1/60;
     } else {
-      this.darkBorder.alpha = targetAlpha;
+      actualAlpha = targetAlpha;
     }
+    this.darkBorder.alpha = actualAlpha;
+    this.annoyingHum.volume = (actualAlpha - 0.1) * this.annoyingHumVolume;
+    this.chatter.volume = Math.max(0, actualAlpha - 0.4) *
+                          this.chatterVolume;
+    this.calmMusic.volume = (1 - (actualAlpha - 0.1)) * this.calmVolume;
   }
 
   distToNearestEnemy() {
