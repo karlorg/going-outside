@@ -59,8 +59,8 @@ export default class extends Phaser.State {
     }
 
     this.zGroup = this.game.add.group();
-    for (let row = 0; row < 32; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < this.map.length; row++) {
+      for (let col = 0; col < this.map[row].length; col++) {
         if (this.map[row][col] === null) { continue; }
         let x = col * 64;
         const y = row * 16;
@@ -91,6 +91,17 @@ export default class extends Phaser.State {
     this.player.lastFacing = "down";
     this.zGroup.add(this.player);
     this.updatePlayerAnchors();
+
+    // spawn a few enemies to start
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
+    this.spawnEnemies(true);
 
     this.shootGraphics = this.game.add.graphics(0, 0);
 
@@ -337,10 +348,10 @@ export default class extends Phaser.State {
     }
   }
 
-  spawnEnemies() {
+  spawnEnemies(force=false) {
     const rnd = this.game.rnd;
     const spawnRate = 0.5;  // enemies/second
-    if (rnd.frac() < spawnRate / 60) {
+    if (rnd.frac() < spawnRate / 60 || force) {
       const mainAxis = rnd.between(0, 1);
       let tileX = 0;
       let tileY = 0;
@@ -532,6 +543,8 @@ export default class extends Phaser.State {
   }
 
   crackTiles() {
+    let crackOccurred = false;
+
     const {x: nx, y: ny} =
       this.nearestTileTo(this.player.x, this.player.y);
     const candidates = this.neighboursOf({x: nx, y: ny});
@@ -544,13 +557,18 @@ export default class extends Phaser.State {
       const dist = this.distToNearestEnemy();
       const crackChance = (
         dist > this.darknessMaxDist * 0.8  ? 0 :
-        dist > this.darknessMaxDist * 0.6  ? 0.1 / 60 :
-        dist > this.darknessMaxDist * 0.4  ? 0.3 / 60 :
-                                             1.0 / 60
+        dist > this.darknessMaxDist * 0.6  ? 0.2 / 60 :
+        dist > this.darknessMaxDist * 0.4  ? 0.5 / 60 :
+                                             1.3 / 60
       );
       if (this.game.rnd.frac() < crackChance) {
         this.crackTile(tile);
+        crackOccurred = true;
       }
+    }
+
+    if (crackOccurred) {
+      // this.shakeSprite(this.player.animObj);
     }
   }
 
@@ -573,6 +591,22 @@ export default class extends Phaser.State {
       const {x: tx, y: ty} = this.nearestTileTo(tile.x, tile.y);
       this.map[ty][tx] = null;
     }
+  }
+
+  shakeSprite(sprite) {
+    function wiggle(aProgress, aPeriod1, aPeriod2) {
+      const current1 = aProgress * Math.PI * 2 * aPeriod1;
+      const current2 = aProgress * (Math.PI * 2 * aPeriod2 + Math.PI / 2);
+
+      return Math.sin(current1) * Math.cos(current2);
+    }
+
+    this.game.add.tween(sprite.anchor).to(
+      { x: sprite.anchor.x + 0.1 }, 500,
+      function (k) {
+        return wiggle(k, 100, 200);
+      }, true, 0, -1
+    );
   }
 
 }
