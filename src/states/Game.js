@@ -83,14 +83,7 @@ export default class extends Phaser.State {
     const ball = this.player.ball = this.game.add.sprite(0, 0, "ballfolk");
     this.player.addChild(ball);
     this.player.animObj = ball;
-    ball.animations.add("standDown", [1]);
-    ball.animations.add("walkDown", [2, 3, 4, 5], 4, true);
-    ball.animations.add("standLeft", [6]);
-    ball.animations.add("walkLeft", [7, 8, 9, 10], 4, true);
-    ball.animations.add("standUp", [11]);
-    ball.animations.add("walkUp", [12, 13, 14, 15], 4, true);
-    ball.animations.add("walkRight", [17, 18, 19, 20], 4, true);
-    ball.animations.add("standRight", [22]);
+    this.addBallfolkAnims(ball);
     ball.animations.play("standDown");
     this.player.falling = false;
     this.player.distFallen = 0;
@@ -148,6 +141,17 @@ export default class extends Phaser.State {
     }
   }
 
+  addBallfolkAnims(sprite) {
+    sprite.animations.add("standDown", [1]);
+    sprite.animations.add("walkDown", [2, 3, 4, 5], 4, true);
+    sprite.animations.add("standLeft", [6]);
+    sprite.animations.add("walkLeft", [7, 8, 9, 10], 4, true);
+    sprite.animations.add("standUp", [11]);
+    sprite.animations.add("walkUp", [12, 13, 14, 15], 4, true);
+    sprite.animations.add("walkRight", [17, 18, 19, 20], 4, true);
+    sprite.animations.add("standRight", [22]);
+  }
+
   movePlayer () {
     if (this.player.falling) { return; }
     const pad = this.game.input.gamepad.pad1;
@@ -176,44 +180,51 @@ export default class extends Phaser.State {
     }
 
     if (targetX !== 0 || targetY !== 0) {
-      const tau = Math.PI * 2;
       let moveAngle = Math.atan2(targetY, targetX);
-      while (moveAngle < 0) { moveAngle += tau; }
-      while (moveAngle >= tau) { moveAngle -= tau; }
       const dx = this.playerSpeed * Math.cos(moveAngle) / 60;
       const dy = this.playerSpeed * Math.sin(moveAngle) / 60;
       this.player.x += dx;
       this.player.y += dy;
-      if (moveAngle > tau/8 && moveAngle <= 3*tau/8) {
-        this.player.animObj.animations.play("walkDown");
-        this.player.lastFacing = "down";
-      } else if (moveAngle > 3*tau/8 && moveAngle <= 5*tau/8) {
-        this.player.animObj.animations.play("walkLeft");
-        this.player.lastFacing = "left";
-      } else if ((moveAngle > 5*tau/8 && moveAngle <= 7*tau/8)) {
-        this.player.animObj.animations.play("walkUp");
-        this.player.lastFacing = "up";
-      } else {
-        this.player.animObj.animations.play("walkRight");
-        this.player.lastFacing = "right";
-      }
+      this.setWalkAnim(this.player.animObj, moveAngle, true);
     } else {  // not moving
-      switch (this.player.lastFacing) {
+      this.setWalkAnim(this.player.animObj, 0, false);
+    }
+  }
+
+  setWalkAnim(sprite, angle, isMoving) {
+    const tau = Math.PI * 2;
+    while (angle < 0) { angle += tau; }
+    while (angle >= tau) { angle -= tau; }
+    if (isMoving) {
+      if (angle > tau/8 && angle <= 3*tau/8) {
+        sprite.animations.play("walkDown");
+        sprite.lastFacing = "down";
+      } else if (angle > 3*tau/8 && angle <= 5*tau/8) {
+        sprite.animations.play("walkLeft");
+        sprite.lastFacing = "left";
+      } else if ((angle > 5*tau/8 && angle <= 7*tau/8)) {
+        sprite.animations.play("walkUp");
+        sprite.lastFacing = "up";
+      } else {
+        sprite.animations.play("walkRight");
+        sprite.lastFacing = "right";
+      }
+    } else {
+      switch (sprite.lastFacing) {
         case "right":
-          this.player.animObj.animations.play("standRight");
+          sprite.animations.play("standRight");
           break;
         case "left":
-          this.player.animObj.animations.play("standLeft");
+          sprite.animations.play("standLeft");
           break;
         case "up":
-          this.player.animObj.animations.play("standUp");
+          sprite.animations.play("standUp");
           break;
         default:
-          this.player.animObj.animations.play("standDown");
+          sprite.animations.play("standDown");
           break;
       }
     }
-
   }
 
   processShoot () {
@@ -348,8 +359,8 @@ export default class extends Phaser.State {
 
   makeAndAddEnemy(x, y) {
     const enemy = this.game.add.sprite(x, y, "ballfolk");
-    enemy.animations.add("stand", [1]);
-    enemy.animations.play("stand");
+    this.addBallfolkAnims(enemy);
+    enemy.animations.play("standDown");
     enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
     enemy.health = 100;
     this.pickDestination(enemy);
@@ -385,7 +396,9 @@ export default class extends Phaser.State {
         const angle = Math.atan2(diry, dirx);
         enemy.x += this.enemyWalkSpeed * Math.cos(angle) / 60;
         enemy.y += this.enemyWalkSpeed * Math.sin(angle) / 60;
+        this.setWalkAnim(enemy, angle, true);
       } else {
+        this.setWalkAnim(enemy, 0, false);
         if (!enemy.arrived) {
           enemy.arrived = true;
           enemy.dawdleNextTime =
