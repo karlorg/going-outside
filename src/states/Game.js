@@ -90,11 +90,12 @@ export default class extends Phaser.State {
     ball.animations.add("standUp", [11]);
     ball.animations.add("walkUp", [12, 13, 14, 15], 4, true);
     ball.animations.add("walkRight", [17, 18, 19, 20], 4, true);
-    ball.animations.add("standRight", [21]);
+    ball.animations.add("standRight", [22]);
     ball.animations.play("standDown");
     this.player.falling = false;
     this.player.distFallen = 0;
     this.player.fallRate = 0;
+    this.player.lastFacing = "down";
     this.zGroup.add(this.player);
     this.updatePlayerAnchors();
 
@@ -185,12 +186,31 @@ export default class extends Phaser.State {
       this.player.y += dy;
       if (moveAngle > tau/8 && moveAngle <= 3*tau/8) {
         this.player.animObj.animations.play("walkDown");
+        this.player.lastFacing = "down";
       } else if (moveAngle > 3*tau/8 && moveAngle <= 5*tau/8) {
         this.player.animObj.animations.play("walkLeft");
+        this.player.lastFacing = "left";
       } else if ((moveAngle > 5*tau/8 && moveAngle <= 7*tau/8)) {
         this.player.animObj.animations.play("walkUp");
+        this.player.lastFacing = "up";
       } else {
         this.player.animObj.animations.play("walkRight");
+        this.player.lastFacing = "right";
+      }
+    } else {  // not moving
+      switch (this.player.lastFacing) {
+        case "right":
+          this.player.animObj.animations.play("standRight");
+          break;
+        case "left":
+          this.player.animObj.animations.play("standLeft");
+          break;
+        case "up":
+          this.player.animObj.animations.play("standUp");
+          break;
+        default:
+          this.player.animObj.animations.play("standDown");
+          break;
       }
     }
 
