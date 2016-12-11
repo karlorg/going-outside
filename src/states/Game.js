@@ -37,8 +37,11 @@ export default class extends Phaser.State {
     this.playerHeight = 36;  // for visuals
     this.playerMaxFallRate = 160;  // pix/sec
     this.playerFallAccel = 160; // pix/sec/sec
+    this.tantrumDuration = 1;  // sec
+    this.tantrumScareDistance = 180;
 
     this.enemyWalkSpeed = 40;  // pix/sec
+    this.enemyRunSpeed = 80;
 
     this.shootRange = 160;
     this.shotFadeTime = 1;  // sec
@@ -118,11 +121,6 @@ export default class extends Phaser.State {
     this.spawnEnemies(true);
     this.spawnEnemies(true);
     this.spawnEnemies(true);
-    this.spawnEnemies(true);
-    this.spawnEnemies(true);
-    this.spawnEnemies(true);
-    this.spawnEnemies(true);
-    this.spawnEnemies(true);
 
     this.shootGraphics = this.game.add.graphics(0, 0);
 
@@ -152,7 +150,7 @@ export default class extends Phaser.State {
 
   update () {
     this.movePlayer();
-    this.processShoot();
+    this.processTantrum();
     this.collidePlayerTrees();
     this.checkPlayerFall();
     this.processPlayerFall();
@@ -182,10 +180,12 @@ export default class extends Phaser.State {
     sprite.animations.add("walkUp", [12, 13, 14, 15], 4, true);
     sprite.animations.add("walkRight", [17, 18, 19, 20], 4, true);
     sprite.animations.add("standRight", [22]);
+    sprite.animations.add("tantrum", [23, 24], 2, true);
   }
 
   movePlayer () {
     if (this.player.falling) { return; }
+    if (this.player.tantrumming) { return; }
     const pad = this.game.input.gamepad.pad1;
     const keyb = this.game.input.keyboard;
     let targetX = 0;
@@ -263,38 +263,49 @@ export default class extends Phaser.State {
     }
   }
 
-  processShoot () {
-    if (this.game.time.totalElapsedSeconds() <
-        this.lastShotTime + this.shootDelay) {
-      return;
+  processTantrum () {
+    if (this.player.tantrumming) {
+      if (this.game.time.totalElapsedSeconds() >
+          this.player.tantrumTime + this.tantrumDuration) {
+        this.player.tantrumming = false;
+        this.setWalkAnim(this.player.animObj, 0, false);
+      } else {
+        return;
+      }
     }
     const pad = this.game.input.gamepad.pad1;
     const keyb = this.game.input.keyboard;
-    let targetX = 0;
-    let targetY = 0;
-    if (pad.isDown(Phaser.Gamepad.XBOX360_X) ||
-        keyb.isDown(Phaser.Keyboard.LEFT) ||
-        pad.axis(Phaser.Gamepad.XBOX360_STICK_RIGHT_X) < -0.1) {
-      targetX -= 1;
-    }
-    if (pad.isDown(Phaser.Gamepad.XBOX360_B) ||
-        keyb.isDown(Phaser.Keyboard.RIGHT) ||
-        pad.axis(Phaser.Gamepad.XBOX360_STICK_RIGHT_X) > 0.1) {
-      targetX += 1;
-    }
-    if (pad.isDown(Phaser.Gamepad.XBOX360_Y) ||
-        keyb.isDown(Phaser.Keyboard.UP) ||
-        pad.axis(Phaser.Gamepad.XBOX360_STICK_RIGHT_Y) < -0.1) {
-      targetY -= 1;
-    }
     if (pad.isDown(Phaser.Gamepad.XBOX360_A) ||
-        keyb.isDown(Phaser.Keyboard.DOWN) ||
-        pad.axis(Phaser.Gamepad.XBOX360_STICK_RIGHT_Y) > 0.1) {
-      targetY += 1;
+        keyb.isDown(Phaser.Keyboard.SHIFT)) {
+      this.startTantrum();
     }
-    if (targetX !== 0 || targetY !== 0) {
-      this.shootAtVector(targetX, targetY);
+  }
+
+  startTantrum() {
+    this.player.tantrumming = true;
+    this.player.tantrumTime = this.game.time.totalElapsedSeconds();
+    this.player.animObj.animations.play("tantrum");
+
+    for (const enemy of this.enemies) {
+      if (this.distBetween(enemy, this.player) < this.tantrumScareDistance) {
+        this.scareEnemy(enemy);
+      }
     }
+  }
+
+  scareEnemy(enemy) {
+    console.log("scare");
+    enemy.scared = true;
+    this.game.time.events.add(Phaser.Timer.SECOND * 2, this.killEnemy,
+                              this, enemy);
+    const tween = this.game.add.tween(enemy);
+    tween.to({ alpha: 0 }, 2000, Phaser.Easing.Default, true);
+  }
+
+  killEnemy(enemy) {
+    console.log("kill");
+    this.enemies.splice(this.enemies.indexOf(enemy), 1);
+    enemy.destroy();
   }
 
   shootAtVector (dirx, diry) {
@@ -425,24 +436,37 @@ export default class extends Phaser.State {
 
   processEnemies() {
     for (const enemy of this.enemies) {
-      const dest = enemy.offsetDestination;
-      const dirx = dest.x - enemy.x;
-      const diry = dest.y - enemy.y;
-      if (dirx * dirx + diry * diry > 20 * 20) {
+      if (enemy.scared) {
+        const dirx = enemy.x - this.player.x;
+        let diry = enemy.y - this.player.y;
+        if (dirx === 0 && diry === 0) {
+          diry = 1;
+        }
         const angle = Math.atan2(diry, dirx);
-        enemy.x += this.enemyWalkSpeed * Math.cos(angle) / 60;
-        enemy.y += this.enemyWalkSpeed * Math.sin(angle) / 60;
+        enemy.x += this.enemyRunSpeed * Math.cos(angle) / 60;
+        enemy.y += this.enemyRunSpeed * Math.sin(angle) / 60;
         this.setWalkAnim(enemy, angle, true);
       } else {
-        this.setWalkAnim(enemy, 0, false);
-        if (!enemy.arrived) {
-          enemy.arrived = true;
-          enemy.dawdleNextTime =
-            this.game.time.totalElapsedSeconds() + this.game.rnd.between(0, 6);
-        } else if (this.game.time.totalElapsedSeconds() >
-                   enemy.dawdleNextTime) {
-          this.pickOffsetDestination(enemy);
-          enemy.arrived = false;
+        const dest = enemy.offsetDestination;
+        const dirx = dest.x - enemy.x;
+        const diry = dest.y - enemy.y;
+        if (dirx * dirx + diry * diry > 20 * 20) {
+          const angle = Math.atan2(diry, dirx);
+          enemy.x += this.enemyWalkSpeed * Math.cos(angle) / 60;
+          enemy.y += this.enemyWalkSpeed * Math.sin(angle) / 60;
+          this.setWalkAnim(enemy, angle, true);
+        } else {
+          this.setWalkAnim(enemy, 0, false);
+          if (!enemy.arrived) {
+            enemy.arrived = true;
+            enemy.dawdleNextTime =
+              this.game.time.totalElapsedSeconds() +
+              this.game.rnd.between(0, 6);
+          } else if (this.game.time.totalElapsedSeconds() >
+                     enemy.dawdleNextTime) {
+            this.pickOffsetDestination(enemy);
+            enemy.arrived = false;
+          }
         }
       }
     }
@@ -560,11 +584,22 @@ export default class extends Phaser.State {
     return dist;
   }
 
+  distBetween(s1, s2) {
+    const dx = s1.x - s2.x;
+    const dy = s1.y - s2.y;
+    const distSq = dx * dx + dy * dy;
+    return Math.sqrt(distSq);
+  }
+
   neighboursOf({x, y}) {
     return [
       {x, y},
       {x: x+1, y}, {x: x-1, y},
-      {x, y: y-2}, {x, y: y+2}
+      {x, y: y-2}, {x, y: y+2},
+      {x: (y % 2 === 0 ? x : x-1), y: y-1},
+      {x: (y % 2 === 0 ? x : x-1), y: y+1},
+      {x: (y % 2 === 0 ? x+1 : x), y: y-1},
+      {x: (y % 2 === 0 ? x+1 : x), y: y+1},
     ].filter(({x, y}) => {
       return (
         (y >= 0) && (y < this.map.length) &&
