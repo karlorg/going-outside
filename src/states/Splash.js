@@ -15,6 +15,7 @@ export default class extends Phaser.State {
     //
     // load your assets
     //
+    this.load.image('room', 'assets/images/room.png');
     this.load.image('tile', 'assets/images/tile.png');
     this.load.image('crack1', 'assets/images/crack1.png');
     this.load.image('crack2', 'assets/images/crack2.png');
@@ -46,7 +47,7 @@ export default class extends Phaser.State {
   }
 
   create () {
-    this.state.start('Game');
+    this.state.start('Room');
   }
 
 }

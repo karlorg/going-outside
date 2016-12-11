@@ -294,7 +294,6 @@ export default class extends Phaser.State {
   }
 
   scareEnemy(enemy) {
-    console.log("scare");
     enemy.scared = true;
     this.game.time.events.add(Phaser.Timer.SECOND * 2, this.killEnemy,
                               this, enemy);
@@ -303,7 +302,6 @@ export default class extends Phaser.State {
   }
 
   killEnemy(enemy) {
-    console.log("kill");
     this.enemies.splice(this.enemies.indexOf(enemy), 1);
     enemy.destroy();
   }
@@ -479,6 +477,17 @@ export default class extends Phaser.State {
         tileX < 0 || tileX >= this.map[tileY].length ||
         this.map[tileY][tileX] === null) {
       this.player.falling = true;
+      this.calmMusic.fadeTo(2000, 0);
+      this.annoyingHum.fadeTo(2000, 0);
+      this.chatter.fadeTo(2000, 0);
+      this.footstepsSound.stop();
+      this.game.time.events.add(Phaser.Timer.SECOND * 5, () => {
+        this.calmMusic.destroy();
+        this.annoyingHum.destroy();
+        this.chatter.destroy();
+        this.footstepsSound.destroy();
+        this.game.state.start("Room");
+      });
       this.mapZGroup.add(this.player);
       this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
     }
