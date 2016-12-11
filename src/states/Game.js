@@ -473,17 +473,29 @@ export default class extends Phaser.State {
     for (const {x, y} of candidates) {
       const tile = this.map[y][x];
       if (tile === null) { continue; }
-      if (this.game.rnd.frac() < 0.1 / 60) {
-        if (tile.crackLevel < this.tileMaxCrackLevel) {
-          tile.crackLevel += 1;
-          // (tile.y+1) is a hack to make z-sorting mostly work
-          const crack = this.game.add.sprite(
-            tile.x, tile.y + 1, `crack${tile.crackLevel}`
-          );
-          crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
-          this.mapZGroup.add(crack);
-        }
+      const dist = this.distToNearestEnemy();
+      const crackChance = (
+        dist > this.darknessMaxDist * 0.8  ? 0 :
+        dist > this.darknessMaxDist * 0.6  ? 0.1 / 60 :
+        dist > this.darknessMaxDist * 0.4  ? 0.3 / 60 :
+                                             0.6 / 60
+      );
+      if (this.game.rnd.frac() < crackChance) {
+        this.crackTile(tile);
       }
     }
   }
+
+  crackTile(tile) {
+    if (tile.crackLevel < this.tileMaxCrackLevel) {
+      tile.crackLevel += 1;
+      // (tile.y+1) is a hack to make z-sorting mostly work
+      const crack = this.game.add.sprite(
+        tile.x, tile.y + 1, `crack${tile.crackLevel}`
+      );
+      crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
+      this.mapZGroup.add(crack);
+    }
+  }
+
 }
