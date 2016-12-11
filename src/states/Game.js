@@ -80,8 +80,18 @@ export default class extends Phaser.State {
     this.player = this.game.add.sprite(320, 320);
     const ring = this.player.ring = this.game.add.sprite(0, 0, "ring");
     this.player.addChild(ring);
-    const ball = this.player.ball = this.game.add.sprite(0, 0, "ball");
+    const ball = this.player.ball = this.game.add.sprite(0, 0, "ballfolk");
     this.player.addChild(ball);
+    this.player.animObj = ball;
+    ball.animations.add("standDown", [1]);
+    ball.animations.add("walkDown", [2, 3, 4, 5], 4, true);
+    ball.animations.add("standLeft", [6]);
+    ball.animations.add("walkLeft", [7, 8, 9, 10], 4, true);
+    ball.animations.add("standUp", [11]);
+    ball.animations.add("walkUp", [12, 13, 14, 15], 4, true);
+    ball.animations.add("walkRight", [17, 18, 19, 20], 4, true);
+    ball.animations.add("standRight", [21]);
+    ball.animations.play("standDown");
     this.player.falling = false;
     this.player.distFallen = 0;
     this.player.fallRate = 0;
@@ -163,8 +173,27 @@ export default class extends Phaser.State {
         pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.1) {
       targetY += 1;
     }
-    this.player.x += targetX * this.playerSpeed / 60;
-    this.player.y += targetY * this.playerSpeed / 60;
+
+    if (targetX !== 0 || targetY !== 0) {
+      const tau = Math.PI * 2;
+      let moveAngle = Math.atan2(targetY, targetX);
+      while (moveAngle < 0) { moveAngle += tau; }
+      while (moveAngle >= tau) { moveAngle -= tau; }
+      const dx = this.playerSpeed * Math.cos(moveAngle) / 60;
+      const dy = this.playerSpeed * Math.sin(moveAngle) / 60;
+      this.player.x += dx;
+      this.player.y += dy;
+      if (moveAngle > tau/8 && moveAngle <= 3*tau/8) {
+        this.player.animObj.animations.play("walkDown");
+      } else if (moveAngle > 3*tau/8 && moveAngle <= 5*tau/8) {
+        this.player.animObj.animations.play("walkLeft");
+      } else if ((moveAngle > 5*tau/8 && moveAngle <= 7*tau/8)) {
+        this.player.animObj.animations.play("walkUp");
+      } else {
+        this.player.animObj.animations.play("walkRight");
+      }
+    }
+
   }
 
   processShoot () {
@@ -298,7 +327,9 @@ export default class extends Phaser.State {
   }
 
   makeAndAddEnemy(x, y) {
-    const enemy = this.game.add.sprite(x, y, "ball");
+    const enemy = this.game.add.sprite(x, y, "ballfolk");
+    enemy.animations.add("stand", [1]);
+    enemy.animations.play("stand");
     enemy.anchor.setTo(32 / enemy.width, 64 / enemy.height);
     enemy.health = 100;
     this.pickDestination(enemy);
@@ -482,7 +513,7 @@ export default class extends Phaser.State {
         dist > this.darknessMaxDist * 0.8  ? 0 :
         dist > this.darknessMaxDist * 0.6  ? 0.1 / 60 :
         dist > this.darknessMaxDist * 0.4  ? 0.3 / 60 :
-                                             0.7 / 60
+                                             1.0 / 60
       );
       if (this.game.rnd.frac() < crackChance) {
         this.crackTile(tile);

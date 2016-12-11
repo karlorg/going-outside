@@ -19,7 +19,10 @@ export default class extends Phaser.State {
     this.load.image('crack1', 'assets/images/crack1.png');
     this.load.image('crack2', 'assets/images/crack2.png');
     this.load.image('crack3', 'assets/images/crack3.png');
-    this.load.image('ball', 'assets/images/ball.png');
+    this.load.spritesheet(
+      'ballfolk', 'assets/images/ballfolk.png',
+      64, 96
+    );
     this.load.image('ring', 'assets/images/ring.png');
     this.load.image('dark-border', 'assets/images/dark-border.png');
     this.load.image('palm01', 'assets/images/isometric trees/palm01.png');
