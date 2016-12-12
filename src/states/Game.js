@@ -309,6 +309,7 @@ export default class extends Phaser.State {
     this.player.tantrumTime = this.game.time.totalElapsedSeconds();
     this.player.animObj.animations.play("tantrum");
     this.screamSound.play(null, null, 0.5);
+    this.processPulses(true);
 
     let wereAnyScared = false;
     for (const enemy of this.enemies) {
@@ -647,10 +648,10 @@ export default class extends Phaser.State {
     });
   }
 
-  processPulses() {
+  processPulses(force=false) {
     const now = this.game.time.totalElapsedSeconds();
     const dist = this.distToNearestEnemy();
-    if (dist > this.darknessMaxDist) { return; }
+    if (dist > this.darknessMaxDist && !force) { return; }
     const intensity = this.getScaleBetween(
       dist, this.darknessMinDist, this.darknessMaxDist
     );
@@ -658,7 +659,7 @@ export default class extends Phaser.State {
       intensity *
       (this.stressPulseMaxDelay - this.stressPulseMinDelay) +
       this.stressPulseMinDelay;
-    if (now < this.lastPulseTime + pulseDelay) { return; }
+    if (now < this.lastPulseTime + pulseDelay &&!force) { return; }
 
     this.lastPulseTime = now;
     const pulse = this.game.add.sprite(
@@ -678,10 +679,10 @@ export default class extends Phaser.State {
       pulse.destroy();
     });
 
-    this.crackTiles();
+    this.crackTiles(force);
   }
 
-  crackTiles() {
+  crackTiles(force=false) {
     let crackOccurred = false;
 
     const {x: nx, y: ny} =
@@ -695,6 +696,7 @@ export default class extends Phaser.State {
       ) { continue; }
       const dist = this.distToNearestEnemy();
       const crackChance = (
+        force                              ? 0.2 :
         dist > this.darknessMaxDist * 0.8  ? 0 :
         dist > this.darknessMaxDist * 0.6  ? 0.2 :
         dist > this.darknessMaxDist * 0.4  ? 0.5 :
