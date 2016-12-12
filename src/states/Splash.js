@@ -26,17 +26,9 @@ export default class extends Phaser.State {
       'audio toggle', 'assets/images/audio toggle.png', 128, 128);
     this.load.spritesheet(
       'animtile', 'assets/images/animtile.png', 64, 64);
-    this.load.image('tile', 'assets/images/tile.png');
-    this.load.image('crack1', 'assets/images/crack1.png');
-    this.load.image('crack2', 'assets/images/crack2.png');
-    this.load.image('crack3', 'assets/images/crack3.png');
     this.load.spritesheet(
       'ballfolk', 'assets/images/ballfolk.png',
       64, 96
-    );
-    this.load.spritesheet(
-      'badnote1', 'assets/images/badnote1.png',
-      32, 32
     );
     this.load.image('ring', 'assets/images/ring.png');
     this.load.image('stress pulse', 'assets/images/stress pulse.png');
