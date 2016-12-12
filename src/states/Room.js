@@ -13,6 +13,7 @@ export default class extends Phaser.State {
     }
 
     this.playerSpeed = 80;  // pix/sec
+    this.playerMaxFallRate = 320;  // pix/sec
 
     const room = this.game.add.sprite(0, 0, "room");
     room.fixedToCamera = true;
@@ -32,16 +33,10 @@ export default class extends Phaser.State {
     wasd.animations.play("wobble");
     wasd.alpha = 0;
     wasd.scale.setTo(0.5);
-    if (!window.ld37.wasdUnderstood) {
-      this.game.add.tween(wasd).to(
-        { alpha: 1 }, 2000, Phaser.Easing.Default, true
-      );
-    }
     // misc player stuff
     this.player.falling = false;
-    this.player.distFallen = 0;
-    this.player.fallRate = 0;
     this.player.lastFacing = "down";
+    this.startPlayerFall();
 
     this.audioToggle = this.game.add.button(640, 640, "audio toggle", () => {
       this.game.sound.mute = !this.game.sound.mute;
@@ -50,6 +45,8 @@ export default class extends Phaser.State {
     this.audioToggle.fixedToCamera = true;
     this.audioToggle.animations.add("on", [0, 1], 2, true);
     this.audioToggle.animations.add("off", [2, 3], 2, true);
+
+    this.game.camera.flash(0x000000, 3000, true);
 
     this.game.input.gamepad.start();
   }
@@ -73,8 +70,26 @@ export default class extends Phaser.State {
     sprite.animations.add("tantrum", [23, 24], 2, true);
   }
 
+  startPlayerFall() {
+    const p = this.player;
+    p.falling = true;
+    p.y = -960;
+  }
+
   movePlayer () {
-    if (this.player.falling) { return; }
+    if (this.player.falling) {
+      this.player.y += this.playerMaxFallRate / 60;
+      if (this.player.y >= 320-48) {
+        this.player.y = 320-48;
+        this.player.falling = false;
+        if (!window.ld37.wasdUnderstood) {
+          this.game.add.tween(this.player.wasd).to(
+            { alpha: 1 }, 2000, Phaser.Easing.Default, true
+          );
+        }
+      }
+      return;
+    }
     if (this.player.tantrumming) { return; }
     const pad = this.game.input.gamepad.pad1;
     const keyb = this.game.input.keyboard;
