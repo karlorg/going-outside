@@ -91,12 +91,14 @@ export default class extends Phaser.State {
     sprite.animations.add("walkRight", [17, 18, 19, 20], 4, true);
     sprite.animations.add("standRight", [22]);
     sprite.animations.add("tantrum", [23, 24], 2, true);
+    sprite.animations.add("fall", [25, 26], 2, true);
   }
 
   startPlayerFall() {
     const p = this.player;
     p.falling = true;
     p.y = -960;
+    p.animObj.animations.play("fall");
   }
 
   movePlayer () {

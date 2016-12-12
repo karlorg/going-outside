@@ -250,6 +250,7 @@ export default class extends Phaser.State {
     sprite.animations.add("walkRight", [17, 18, 19, 20], 4, true);
     sprite.animations.add("standRight", [22]);
     sprite.animations.add("tantrum", [23, 24], 2, true);
+    sprite.animations.add("fall", [25, 26], 2, true);
   }
 
   movePlayer () {
@@ -554,6 +555,7 @@ export default class extends Phaser.State {
         this.map[tileY][tileX] === null) {
       this.player.falling = true;
       this.fallSound.play(null, null, 0.5);
+      this.player.animObj.animations.play("fall");
       this.calmMusic.fadeTo(2000, 0);
       this.annoyingHum.fadeTo(2000, 0);
       this.chatter.fadeTo(2000, 0);
