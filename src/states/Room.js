@@ -40,6 +40,13 @@ export default class extends Phaser.State {
     this.player.lastFacing = "down";
     this.startPlayerFall();
 
+    const roommid = this.game.add.sprite(324, 315, "roommid");
+    roommid.anchor.setTo(1, 0);
+
+    this.zGroup = this.game.add.group();
+    this.zGroup.add(this.player);
+    this.zGroup.add(roommid);
+
     this.audioToggle = this.game.add.button(640, 640, "audio toggle", () => {
       this.game.sound.mute = !this.game.sound.mute;
     });
@@ -57,6 +64,9 @@ export default class extends Phaser.State {
       scoreText.anchor.setTo(0, 1);
     }
 
+    const roomfg = this.game.add.sprite(284, 400, "roomfg");
+    roomfg.anchor.setTo(0, 1);
+
     this.game.camera.flash(0x000000, 3000, true);
 
     this.game.input.gamepad.start();
@@ -67,6 +77,7 @@ export default class extends Phaser.State {
   update() {
     this.movePlayer();
     this.updateAudioToggle();
+    this.zGroup.sort('y', Phaser.Group.SORT_ASCENDING);
   }
 
   addBallfolkAnims(sprite) {
@@ -101,7 +112,6 @@ export default class extends Phaser.State {
       }
       return;
     }
-    if (this.player.tantrumming) { return; }
     const pad = this.game.input.gamepad.pad1;
     const keyb = this.game.input.keyboard;
     let targetX = 0;
@@ -125,6 +135,10 @@ export default class extends Phaser.State {
         keyb.isDown(Phaser.Keyboard.S) ||
         pad.axis(Phaser.Gamepad.XBOX360_STICK_LEFT_Y) > 0.1) {
       targetY += 1;
+    }
+
+    if (this.isLeaving) {
+        targetX = targetY = 1;
     }
 
     let newX = 0;
@@ -159,7 +173,16 @@ export default class extends Phaser.State {
       this.player.y = newY;
     }
     if (newY > 465 - newX/2) {
-      this.game.state.start("Game");
+      if (!this.isLeaving) {
+        this.isLeaving = true;
+        this.game.camera.fade(0x000000, 1000, true);
+        this.game.time.events.add(Phaser.Timer.SECOND * 1, () => {
+          this.game.state.start("Game");
+        });
+      } else {
+        this.player.x = newX;
+        this.player.y = newY;
+      }
     }
   }
 

@@ -186,6 +186,7 @@ export default class extends Phaser.State {
     this.scoreText.fixedToCamera = true;
 
     this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+    this.game.camera.flash(0x000000, 1000, true);
 
     this.game.input.gamepad.start();
   }
