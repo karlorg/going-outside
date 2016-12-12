@@ -235,10 +235,10 @@ export default class extends Phaser.State {
 
   render () {
     if (__DEV__) {
-      const {x, y} = this.nearestTileTo(this.player.x, this.player.y);
-      this.game.debug.geom(new Phaser.Point(
-        x*64+32 + (y % 2 === 1 ? 32 : 0), y*16+16
-      ), "red");
+      // const {x, y} = this.nearestTileTo(this.player.x, this.player.y);
+      // this.game.debug.geom(new Phaser.Point(
+      //   x*64+32 + (y % 2 === 1 ? 32 : 0), y*16+16
+      // ), "red");
     }
   }
 
