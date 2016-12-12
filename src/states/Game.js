@@ -331,7 +331,7 @@ export default class extends Phaser.State {
       }
     }
     if (wereAnyScared) {
-      this.panicSound.play(null, null, this.chatterVolume * 1.1);
+      this.panicSound.play(null, null, this.chatter.maxVol * 1.1);
     }
   }
 
