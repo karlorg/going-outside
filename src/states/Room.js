@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 
 export default class extends Phaser.State {
-  init () {}
+  init (score=null) {
+    this.lastScore = score;
+  }
   preload () {}
 
   create () {
@@ -45,6 +47,15 @@ export default class extends Phaser.State {
     this.audioToggle.fixedToCamera = true;
     this.audioToggle.animations.add("on", [0, 1], 2, true);
     this.audioToggle.animations.add("off", [2, 3], 2, true);
+
+    if (this.lastScore !== null) {
+      const scoreText = this.game.add.text(
+        0, 640,
+        `Alone time on last outing: ${this.lastScore.toFixed(1)} seconds`,
+        { fill: "white", size: "64px" }
+      );
+      scoreText.anchor.setTo(0, 1);
+    }
 
     this.game.camera.flash(0x000000, 3000, true);
 

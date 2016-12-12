@@ -542,7 +542,8 @@ export default class extends Phaser.State {
         this.game.camera.fade(0x000000, 3000, true);
       });
       this.game.time.events.add(Phaser.Timer.SECOND * 5, () => {
-        this.game.state.start("Room");
+        // pass the final score to Room state so it can display it
+        this.game.state.start("Room", true, false, this.score);
       });
       this.mapZGroup.add(this.player);
       this.mapZGroup.sort('y', Phaser.Group.SORT_ASCENDING);
