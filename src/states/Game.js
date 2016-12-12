@@ -16,7 +16,7 @@ export default class extends Phaser.State {
     this.soundsToDestroy = [];
 
     this.calmMusic = this.game.add.audio('calm music');
-    this.calmVolume = 0.1;
+    this.calmVolume = 0.3;
     this.calmMusic.onDecoded.add(() => {
       this.calmMusic.play('', 0, 0, true);
       this.calmMusic.fadeTo(1000, this.calmVolume);
@@ -37,7 +37,7 @@ export default class extends Phaser.State {
       this.chatter.play('', 0, 0, true);
     });
     this.chatter.maxVol = 0.1;
-    this.chatter.maxDist = 300;
+    this.chatter.maxDist = 240;
     this.chatter.minDist = 80;
     this.soundsToDestroy.push(this.chatter);
 
@@ -82,7 +82,7 @@ export default class extends Phaser.State {
     this.aloneCutoff = 180;
     this.darknessMaxDist = 240;
     this.darknessMinDist = 40;
-    this.crackMaxDist = 200;
+    this.crackMaxDist = 170;
     this.crackMinDist = 40;
 
     this.tileMaxCrackLevel = 2;
@@ -648,15 +648,12 @@ export default class extends Phaser.State {
       actualAlpha = targetAlpha;
     }
     this.darkBorder.alpha = actualAlpha;
-    // this.annoyingHum.volume = (actualAlpha - 0.1) * this.annoyingHumVolume;
-    // this.chatter.volume = Math.max(0, actualAlpha - 0.4) *
-    //                       this.chatterVolume;
     this.calmMusic.volume = (1 - (actualAlpha - 0.1)) * this.calmVolume;
 
     // show shift/space hint if we are sufficiently stressed for the first time
     if (!window.ld37.shiftSpaceUnderstood && targetAlpha > 0.5) {
       this.game.add.tween(this.player.shiftSpace).to(
-        { alpha: 1 }, 2000, Phaser.Easing.Default, true
+        { alpha: 1 }, 1000, Phaser.Easing.Default, true
       );
     }
   }
@@ -721,7 +718,7 @@ export default class extends Phaser.State {
   processPulses(force=false) {
     const now = this.game.time.totalElapsedSeconds();
     const dist = this.distToNearestEnemy();
-    if (dist > this.darknessMaxDist && !force) { return; }
+    if (dist > this.crackMaxDist && !force) { return; }
     const intensity = this.getScaleBetween(
       dist, this.darknessMinDist, this.darknessMaxDist
     );
@@ -766,11 +763,11 @@ export default class extends Phaser.State {
       ) { continue; }
       const dist = this.distToNearestEnemy();
       const crackChance = (
-        force                              ? 0.2 :
-        dist > this.darknessMaxDist * 0.8  ? 0 :
-        dist > this.darknessMaxDist * 0.6  ? 0.2 :
-        dist > this.darknessMaxDist * 0.4  ? 0.5 :
-                                             1.3
+        force                           ? 0.2 :
+        dist > this.crackMaxDist        ? 0 :
+        dist > this.crackMaxDist * 0.75 ? 0.2 :
+        dist > this.crackMaxDist * 0.5  ? 0.5 :
+                                          1.3
       );
       if (this.game.rnd.frac() < crackChance) {
         this.crackTile(tile);
