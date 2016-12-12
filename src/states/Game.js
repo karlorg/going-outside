@@ -104,6 +104,7 @@ export default class extends Phaser.State {
         tile.animations.add("0", [0]);
         tile.animations.add("1", [1, 2, 3], 6);
         tile.animations.add("2", [4, 5, 6], 6);
+        tile.animations.add("crumble", [7, 8, 9, 10], 6);
         tile.animations.play("0");
         tile.anchor.setTo(0.5, 0.25);
         tile.lastCracked = this.game.time.totalElapsedSeconds();
@@ -775,10 +776,13 @@ export default class extends Phaser.State {
       tile.lastCracked = this.game.time.totalElapsedSeconds();
       tile.animations.play(`${tile.crackLevel}`);
     } else {
-      tile.destroy();
+      tile.animations.play("crumble");
       this.crumbleSound.play();
       const {x: tx, y: ty} = this.nearestTileTo(tile.x, tile.y);
       this.map[ty][tx] = null;
+      this.game.time.events.add(Phaser.Timer.SECOND * 4/6, () => {
+        tile.destroy();
+      });
     }
   }
 
