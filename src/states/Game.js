@@ -41,6 +41,8 @@ export default class extends Phaser.State {
     this.soundsToDestroy.push(this.fallSound);
     this.crumbleSound = this.game.add.audio('crumble sound');
     this.soundsToDestroy.push(this.crumbleSound);
+    this.crackSound = this.game.add.audio('crack sound');
+    this.soundsToDestroy.push(this.crackSound);
     this.panicSound = this.game.add.audio('panic sound');
     this.soundsToDestroy.push(this.panicSound);
 
@@ -172,17 +174,20 @@ export default class extends Phaser.State {
   }
 
   update () {
-    this.movePlayer();
-    this.processTantrum();
-    this.collidePlayerTrees();
-    this.checkPlayerFall();
+    if (!this.player.falling) {
+      this.movePlayer();
+      this.processTantrum();
+      this.collidePlayerTrees();
+      this.checkPlayerFall();
+    }
     this.processPlayerFall();
     this.spawnEnemies();
     this.processEnemies();
-    this.updateScore();
-    this.updateDarkness();
-    this.processPulses();
-    this.updateShootGraphics();
+    if (!this.player.falling) {
+      this.updateScore();
+      this.updateDarkness();
+      this.processPulses();
+    }
 
     this.zGroup.sort('y', Phaser.Group.SORT_ASCENDING);
   }
@@ -380,20 +385,6 @@ export default class extends Phaser.State {
       const deadEnemyIndex = deadEnemyIndices[i];
       this.enemies.splice(deadEnemyIndex, 1);
     }
-  }
-
-  updateShootGraphics () {
-    const now = this.game.time.totalElapsedSeconds();
-    const g = this.shootGraphics;
-    g.clear();
-    const alpha = Math.max(
-      1 - ((now - this.lastShotTime) / this.shotFadeTime),
-      0);
-    g.lineStyle(2, 0xffffff, alpha);
-    // (sx, sy) and (dx, dy) are in ground coords, need to move them up a
-    // bit to look right graphically
-    g.moveTo(this.lastShotSx, this.lastShotSy - this.playerHeight / 2);
-    g.lineTo(this.lastShotDx, this.lastShotDy - this.playerHeight / 2);
   }
 
   collidePlayerTrees () {
@@ -709,6 +700,7 @@ export default class extends Phaser.State {
     }
 
     if (crackOccurred) {
+      this.crackSound.play(null, null, 0.5);
       // this.shakeSprite(this.player.animObj);
     }
   }

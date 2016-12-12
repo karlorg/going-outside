@@ -48,6 +48,7 @@ export default class extends Phaser.State {
     this.load.audio('scream', 'assets/sound/get away organic 2.mp3');
     this.load.audio('falling cry', 'assets/sound/falling cry.mp3');
     this.load.audio('crumble sound', 'assets/sound/floor crumble.mp3');
+    this.load.audio('crack sound', 'assets/sound/floor crumble subtle.mp3');
     this.load.audio('panic sound', 'assets/sound/other characters running away.mp3');
   }
 
