@@ -444,12 +444,15 @@ export default class extends Phaser.State {
     const minDistSquared = minDist * minDist;
     for (const tree of this.trees) {
       const dx = tree.x - player.x;
-      const dy = tree.y - player.y;
+      const dy = (tree.y - player.y) * 2;
+      // dy * 2 in order to treat trees as half as thick in the y direction
+      // which fits better with the isometric perspective
       const distSquared = dx*dx + dy*dy;
       if (distSquared < minDistSquared) {
         const angle = Math.atan2(dy, dx);
         player.x = tree.x - minDist * Math.cos(angle);
-        player.y = tree.y - minDist * Math.sin(angle);
+        player.y = tree.y - (minDist * Math.sin(angle) / 2);
+        // divide push distance by 2 in y direction to match perspective
       }
     }
   }
