@@ -59,7 +59,7 @@ export default class extends Phaser.State {
     if (this.lastScore !== null) {
       const scoreText = this.game.add.text(
         0, 640,
-        `Alone time on last outing: ${this.lastScore.toFixed(1)} seconds`,
+        ` Alone time on last outing: ${this.lastScore.toFixed(1)} seconds`,
         { fill: "white", size: "64px" }
       );
       scoreText.anchor.setTo(0, 1);

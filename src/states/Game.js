@@ -147,6 +147,7 @@ export default class extends Phaser.State {
         { alpha: 0 }, 1500, Phaser.Easing.Default, true
       );
     });
+    this.zGroup.add(door);
 
     // create player
     this.player = this.game.add.sprite(320, 320);
@@ -351,7 +352,7 @@ export default class extends Phaser.State {
       if (!window.ld37.shiftSpaceUnderstood) {
         this.game.time.events.add(Phaser.Timer.SECOND * 0.5, () => {
           this.game.add.tween(this.player.shiftSpace).to(
-            { alpha: 0 }, 2000, Phaser.Easing.Default, true
+            { alpha: 0 }, 500, Phaser.Easing.Default, true
           );
         });
         window.ld37.shiftSpaceUnderstood = true;
@@ -626,6 +627,7 @@ export default class extends Phaser.State {
       this.scoreText.setStyle({ fill: "red" });
     }
     this.scoreText.text = `${this.score.toFixed(1)} sec`;
+    this.scoreText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 5);
   }
 
   getScaleBetween(x, min, max) {
