@@ -106,7 +106,7 @@ export default class extends Phaser.State {
         tile.animations.add("2", [4, 5, 6], 6);
         tile.animations.add("crumble", [7, 8, 9, 10], 6);
         tile.animations.play("0");
-        tile.anchor.setTo(0.5, 0.25);
+        tile.anchor.setTo(32/tile.width, 16/tile.height);
         tile.lastCracked = this.game.time.totalElapsedSeconds();
         tile.crackLevel = 0;
         this.mapZGroup.add(tile);
@@ -235,8 +235,10 @@ export default class extends Phaser.State {
 
   render () {
     if (__DEV__) {
-      // this.game.debug.geom(
-      //   new Phaser.Point(this.debugX, this.debugY), "red");
+      const {x, y} = this.nearestTileTo(this.player.x, this.player.y);
+      this.game.debug.geom(new Phaser.Point(
+        x*64+32 + (y % 2 === 1 ? 32 : 0), y*16+16
+      ), "red");
     }
   }
 
@@ -592,8 +594,8 @@ export default class extends Phaser.State {
       const dy = y - cy;
       const distSq = dx * dx + dy * dy;
       if (distSq < nearestDistSq) {
-        nearestX = x;
-        nearestY = y;
+        nearestX = cx;
+        nearestY = cy;
         nearestDistSq = distSq;
       }
     }
