@@ -53,6 +53,9 @@ export default class extends Phaser.State {
     this.playerFallAccel = 160; // pix/sec/sec
     this.tantrumDuration = 1;  // sec
     this.tantrumScareDistance = 180;
+    this.lastPulseTime = 0;
+    this.stressPulseMaxDelay = 3;  // sec
+    this.stressPulseMinDelay = 0.5;
 
     this.enemyWalkSpeed = 40;  // pix/sec
     this.enemyRunSpeed = 80;
@@ -178,6 +181,7 @@ export default class extends Phaser.State {
     this.processEnemies();
     this.updateScore();
     this.updateDarkness();
+    this.processPulses();
     this.crackTiles();
     this.updateShootGraphics();
 
@@ -576,18 +580,21 @@ export default class extends Phaser.State {
     this.scoreText.text = `${Math.floor(this.score)}`;
   }
 
+  getScaleBetween(x, min, max) {
+    if (x < min) {
+      return 0;
+    } else if (x > max) {
+      return 1;
+    } else {
+      return ((x-min)/(max-min));
+    }
+  }
+
   updateDarkness () {
     const dist = this.distToNearestEnemy();
-    let targetAlpha = 0.1;
-    if (dist < this.darknessMaxDist) {
-      if (dist <= this.darknessMinDist) {
-        targetAlpha = 1;
-      } else {
-        targetAlpha = 1 - (((dist - this.darknessMinDist) /
-                            (this.darknessMaxDist - this.darknessMinDist)) *
-                           0.9);
-      }
-    }
+    const scale =
+      this.getScaleBetween(dist, this.darknessMinDist, this.darknessMaxDist);
+    const targetAlpha = 1 - (scale * 0.9);
     const diff = targetAlpha - this.darkBorder.alpha;
     let actualAlpha = this.darkBorder.alpha;
     if (Math.abs(diff) > 1/60) {
@@ -638,6 +645,34 @@ export default class extends Phaser.State {
         (y >= 0) && (y < this.map.length) &&
         (x >= 0) && (x < this.map[0].length)
       );
+    });
+  }
+
+  processPulses() {
+    const now = this.game.time.totalElapsedSeconds();
+    const dist = this.distToNearestEnemy();
+    if (dist > this.darknessMaxDist) { return; }
+    const pulseDelay = this.getScaleBetween(
+      dist, this.darknessMinDist, this.darknessMaxDist
+    ) * (this.stressPulseMaxDelay - this.stressPulseMinDelay) +
+    this.stressPulseMinDelay;
+    if (now < this.lastPulseTime + pulseDelay) { return; }
+
+    this.lastPulseTime = now;
+    const pulse = this.game.add.sprite(
+      this.player.x, this.player.y, "stress pulse"
+    );
+    this.mapZGroup.add(pulse);
+    pulse.anchor.setTo(0.5, 0.5);
+    pulse.scale.setTo(0.2);
+    this.game.add.tween(pulse).to(
+      { alpha: 0 }, 1000, Phaser.Easing.Default, true
+    );
+    this.game.add.tween(pulse.scale).to(
+      { x: 1.2, y: 1.2 }, 1000, Phaser.Easing.Default, true
+    );
+    this.game.time.events.add(Phaser.Timer.SECOND * 1, () => {
+      pulse.destroy();
     });
   }
 

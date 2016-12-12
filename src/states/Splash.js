@@ -29,6 +29,7 @@ export default class extends Phaser.State {
       32, 32
     );
     this.load.image('ring', 'assets/images/ring.png');
+    this.load.image('stress pulse', 'assets/images/stress pulse.png');
     this.load.image('dark-border', 'assets/images/dark-border.png');
     this.load.image('palm01', 'assets/images/isometric trees/palm01.png');
     this.load.image('palm02', 'assets/images/isometric trees/palm02.png');
