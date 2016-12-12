@@ -800,9 +800,9 @@ export default class extends Phaser.State {
       tile.animations.play("crumble");
       this.crumbleSound.play();
       const {x: tx, y: ty} = this.nearestTileTo(tile.x, tile.y);
-      this.map[ty][tx] = null;
       this.game.time.events.add(Phaser.Timer.SECOND * 4/6, () => {
         tile.destroy();
+        this.map[ty][tx] = null;
       });
     }
   }
