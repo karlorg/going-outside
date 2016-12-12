@@ -182,7 +182,6 @@ export default class extends Phaser.State {
     this.updateScore();
     this.updateDarkness();
     this.processPulses();
-    this.crackTiles();
     this.updateShootGraphics();
 
     this.zGroup.sort('y', Phaser.Group.SORT_ASCENDING);
@@ -678,6 +677,8 @@ export default class extends Phaser.State {
     this.game.time.events.add(Phaser.Timer.SECOND * 1, () => {
       pulse.destroy();
     });
+
+    this.crackTiles();
   }
 
   crackTiles() {
@@ -695,9 +696,9 @@ export default class extends Phaser.State {
       const dist = this.distToNearestEnemy();
       const crackChance = (
         dist > this.darknessMaxDist * 0.8  ? 0 :
-        dist > this.darknessMaxDist * 0.6  ? 0.2 / 60 :
-        dist > this.darknessMaxDist * 0.4  ? 0.5 / 60 :
-                                             1.3 / 60
+        dist > this.darknessMaxDist * 0.6  ? 0.2 :
+        dist > this.darknessMaxDist * 0.4  ? 0.5 :
+                                             1.3
       );
       if (this.game.rnd.frac() < crackChance) {
         this.crackTile(tile);
