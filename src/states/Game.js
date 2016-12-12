@@ -20,17 +20,21 @@ export default class extends Phaser.State {
     this.soundsToDestroy.push(this.calmMusic);
 
     this.annoyingHum = this.game.add.audio('annoying hum');
-    this.annoyingHumVolume = 0.1;
     this.annoyingHum.onDecoded.add(() => {
       this.annoyingHum.play('', 0, 0, true);
     });
+    this.annoyingHum.maxVol = 0.1;
+    this.annoyingHum.maxDist = 200;
+    this.annoyingHum.minDist = 40;
     this.soundsToDestroy.push(this.annoyingHum);
 
     this.chatter = this.game.add.audio('chatter');
-    this.chatterVolume = 0.1;
     this.chatter.onDecoded.add(() => {
       this.chatter.play('', 0, 0, true);
     });
+    this.chatter.maxVol = 0.1;
+    this.chatter.maxDist = 300;
+    this.chatter.minDist = 80;
     this.soundsToDestroy.push(this.chatter);
 
     this.footstepsSound = this.game.add.audio('footsteps');
@@ -74,6 +78,8 @@ export default class extends Phaser.State {
     this.aloneCutoff = 160;
     this.darknessMaxDist = 240;
     this.darknessMinDist = 40;
+    this.crackMaxDist = 200;
+    this.crackMinDist = 40;
 
     this.tileMaxCrackLevel = 3;
     this.treeRadius = 6;
@@ -186,6 +192,7 @@ export default class extends Phaser.State {
     if (!this.player.falling) {
       this.updateScore();
       this.updateDarkness();
+      this.updateAmbience();
       this.processPulses();
     }
 
@@ -594,10 +601,28 @@ export default class extends Phaser.State {
       actualAlpha = targetAlpha;
     }
     this.darkBorder.alpha = actualAlpha;
-    this.annoyingHum.volume = (actualAlpha - 0.1) * this.annoyingHumVolume;
-    this.chatter.volume = Math.max(0, actualAlpha - 0.4) *
-                          this.chatterVolume;
+    // this.annoyingHum.volume = (actualAlpha - 0.1) * this.annoyingHumVolume;
+    // this.chatter.volume = Math.max(0, actualAlpha - 0.4) *
+    //                       this.chatterVolume;
     this.calmMusic.volume = (1 - (actualAlpha - 0.1)) * this.calmVolume;
+  }
+
+  updateAmbience() {
+    const dist = this.distToNearestEnemy();
+
+    for (const sound of [this.chatter, this.annoyingHum]) {
+      const scale =
+        this.getScaleBetween(dist, sound.minDist, sound.maxDist);
+      const targetVol = sound.maxVol * (1 - scale);
+      const diff = targetVol - sound.volume;
+      let actualVol = sound.volume;
+      if (Math.abs(diff) > 1/60) {
+        actualVol += (diff/Math.abs(diff)) * 1/60;
+      } else {
+        actualVol = targetVol;
+      }
+      sound.volume = actualVol;
+    }
   }
 
   distToNearestEnemy() {
