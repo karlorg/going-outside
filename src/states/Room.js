@@ -5,6 +5,13 @@ export default class extends Phaser.State {
   preload () {}
 
   create () {
+    if (window.ld37 === undefined) {
+      window.ld37 = {};
+    }
+    if (window.ld37.wasdUnderstood === undefined) {
+      window.ld37.wasdUnderstood = false;
+    }
+
     this.playerSpeed = 80;  // pix/sec
 
     const room = this.game.add.sprite(0, 0, "room");
@@ -17,6 +24,20 @@ export default class extends Phaser.State {
     this.player.animObj = ball;
     this.addBallfolkAnims(ball);
     ball.animations.play("standDown");
+    // wasd indicator stuff
+    const wasd = this.player.wasd = this.game.add.sprite(0, 0, "wasd");
+    this.player.addChild(wasd);
+    wasd.anchor.setTo(0.5, 0.5);
+    wasd.animations.add("wobble", [0, 1], 2, true);
+    wasd.animations.play("wobble");
+    wasd.alpha = 0;
+    wasd.scale.setTo(0.5);
+    if (!window.ld37.wasdUnderstood) {
+      this.game.add.tween(wasd).to(
+        { alpha: 1 }, 2000, Phaser.Easing.Default, true
+      );
+    }
+    // misc player stuff
     this.player.falling = false;
     this.player.distFallen = 0;
     this.player.fallRate = 0;
@@ -74,6 +95,15 @@ export default class extends Phaser.State {
     let newX = 0;
     let newY = 0;
     if (targetX !== 0 || targetY !== 0) {
+      if (!window.ld37.wasdUnderstood) {
+        this.game.time.events.add(Phaser.Timer.SECOND * 2.5, () => {
+          this.game.add.tween(this.player.wasd).to(
+            { alpha: 0 }, 2000, Phaser.Easing.Default, true
+          );
+        });
+        window.ld37.wasdUnderstood = true;
+      }
+
       let moveAngle = Math.atan2(targetY, targetX);
       const dx = this.playerSpeed * Math.cos(moveAngle) / 60;
       const dy = this.playerSpeed * Math.sin(moveAngle) / 60;

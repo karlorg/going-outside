@@ -6,8 +6,12 @@ export default class extends Phaser.State {
   preload () {}
 
   create () {
-    // this.palms = ["palm01", "palm02", "palm03",
-    //               "palm04", "palm05", "palm06"];
+    if (window.ld37 === undefined) {
+      window.ld37 = {};
+    }
+    if (window.ld37.shiftUnderstood === undefined) {
+      window.ld37.shiftUnderstood = false;
+    }
 
     this.soundsToDestroy = [];
 
@@ -140,6 +144,15 @@ export default class extends Phaser.State {
     this.player.lastFacing = "down";
     this.zGroup.add(this.player);
     this.updatePlayerAnchors();
+    // shift/space indicator stuff
+    const shiftSpace = this.player.shiftSpace =
+      this.game.add.sprite(16, 16, "shiftspace");
+    this.player.addChild(shiftSpace);
+    shiftSpace.anchor.setTo(0.5, 0.5);
+    shiftSpace.animations.add("wobble", [0, 1], 2, true);
+    shiftSpace.animations.play("wobble");
+    shiftSpace.alpha = 0;
+    shiftSpace.scale.setTo(0.5);
 
     // spawn a few enemies to start
     this.spawnEnemies(true);
@@ -313,6 +326,15 @@ export default class extends Phaser.State {
     if (pad.isDown(Phaser.Gamepad.XBOX360_A) ||
         keyb.isDown(Phaser.Keyboard.SHIFT)) {
       this.startTantrum();
+      // clear shift-space hint if necessary
+      if (!window.ld37.shiftSpaceUnderstood) {
+        this.game.time.events.add(Phaser.Timer.SECOND * 0.5, () => {
+          this.game.add.tween(this.player.shiftSpace).to(
+            { alpha: 0 }, 2000, Phaser.Easing.Default, true
+          );
+        });
+        window.ld37.shiftSpaceUnderstood = true;
+      }
     }
   }
 
@@ -605,6 +627,13 @@ export default class extends Phaser.State {
     // this.chatter.volume = Math.max(0, actualAlpha - 0.4) *
     //                       this.chatterVolume;
     this.calmMusic.volume = (1 - (actualAlpha - 0.1)) * this.calmVolume;
+
+    // show shift/space hint if we are sufficiently stressed for the first time
+    if (!window.ld37.shiftSpaceUnderstood && targetAlpha > 0.5) {
+      this.game.add.tween(this.player.shiftSpace).to(
+        { alpha: 1 }, 2000, Phaser.Easing.Default, true
+      );
+    }
   }
 
   updateAmbience() {
