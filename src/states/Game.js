@@ -86,7 +86,7 @@ export default class extends Phaser.State {
     this.crackMinDist = 40;
 
     this.tileMaxCrackLevel = 2;
-    this.treeRadius = 6;
+    this.treeRadius = 10;
     this.trees = [];
     this.enemies = [];
 
@@ -128,10 +128,13 @@ export default class extends Phaser.State {
           const worldY = y + 16;
           if (this.distBetween({x: worldX, y: worldY},
                                {x: 320, y: 320}) > 100) {
-            const tree = this.game.add.sprite(worldX, worldY, "palm01");
-              tree.anchor.setTo(130 / tree.width, 104 / tree.height);
-              this.zGroup.add(tree);
-              this.trees.push(tree);
+            const tree = this.game.add.sprite(
+              worldX + (this.game.rnd.between(-3, 3)),
+              worldY, "tree"
+            );
+            tree.anchor.setTo(48 / tree.width, 109 / tree.height);
+            this.zGroup.add(tree);
+            this.trees.push(tree);
           }
         }
       }

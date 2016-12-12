@@ -41,17 +41,10 @@ export default class extends Phaser.State {
     this.load.image('ring', 'assets/images/ring.png');
     this.load.image('stress pulse', 'assets/images/stress pulse.png');
     this.load.image('dark-border', 'assets/images/dark-border.png');
-    this.load.image('palm01', 'assets/images/isometric trees/palm01.png');
-    this.load.image('palm02', 'assets/images/isometric trees/palm02.png');
-    this.load.image('palm03', 'assets/images/isometric trees/palm03.png');
-    this.load.image('palm04', 'assets/images/isometric trees/palm04.png');
-    this.load.image('palm05', 'assets/images/isometric trees/palm05.png');
-    this.load.image('palm06', 'assets/images/isometric trees/palm06.png');
+    this.load.image('tree', 'assets/images/tree.png');
 
     this.load.audio('calm music', 'assets/sound/calm track/Full mix.mp3');
     this.load.audio('chatter', 'assets/sound/warning audio/cutsy chatter.mp3');
-    this.load.audio('brain damage',
-                    'assets/sound/get away audio/brain damage hum.wav');
     this.load.audio('annoying hum',
                     'assets/sound/get away audio/annoying hum/annoying hum.mp3');
     this.load.audio('footsteps', 'assets/sound/footsteps/footsteps 1.mp3');
