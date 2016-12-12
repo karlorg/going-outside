@@ -79,7 +79,7 @@ export default class extends Phaser.State {
     this.lastShotDx = 0;
     this.lastShotDy = 0;
 
-    this.aloneCutoff = 160;
+    this.aloneCutoff = 180;
     this.darknessMaxDist = 240;
     this.darknessMinDist = 40;
     this.crackMaxDist = 200;
@@ -596,8 +596,11 @@ export default class extends Phaser.State {
     const dist = this.distToNearestEnemy();
     if (dist > this.aloneCutoff) {
       this.score += 1/60;
+      this.scoreText.setStyle({ fill: "white" });
+    } else {
+      this.scoreText.setStyle({ fill: "red" });
     }
-    this.scoreText.text = `${Math.floor(this.score)}`;
+    this.scoreText.text = `${this.score.toFixed(1)} sec`;
   }
 
   getScaleBetween(x, min, max) {
