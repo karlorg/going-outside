@@ -9,26 +9,40 @@ export default class extends Phaser.State {
     // this.palms = ["palm01", "palm02", "palm03",
     //               "palm04", "palm05", "palm06"];
 
+    this.soundsToDestroy = [];
+
     this.calmMusic = this.game.add.audio('calm music');
     this.calmVolume = 0.1;
     this.calmMusic.onDecoded.add(() => {
       this.calmMusic.play('', 0, 0, true);
       this.calmMusic.fadeTo(1000, this.calmVolume);
     });
+    this.soundsToDestroy.push(this.calmMusic);
 
     this.annoyingHum = this.game.add.audio('annoying hum');
     this.annoyingHumVolume = 0.1;
     this.annoyingHum.onDecoded.add(() => {
       this.annoyingHum.play('', 0, 0, true);
     });
+    this.soundsToDestroy.push(this.annoyingHum);
 
     this.chatter = this.game.add.audio('chatter');
     this.chatterVolume = 0.1;
     this.chatter.onDecoded.add(() => {
       this.chatter.play('', 0, 0, true);
     });
+    this.soundsToDestroy.push(this.chatter);
 
     this.footstepsSound = this.game.add.audio('footsteps');
+    this.soundsToDestroy.push(this.footstepsSound);
+    this.screamSound = this.game.add.audio('scream');
+    this.soundsToDestroy.push(this.screamSound);
+    this.fallSound = this.game.add.audio('falling cry');
+    this.soundsToDestroy.push(this.fallSound);
+    this.crumbleSound = this.game.add.audio('crumble sound');
+    this.soundsToDestroy.push(this.crumbleSound);
+    this.panicSound = this.game.add.audio('panic sound');
+    this.soundsToDestroy.push(this.panicSound);
 
     this.stage.backgroundColor = '#000000';
 
@@ -146,6 +160,12 @@ export default class extends Phaser.State {
     this.game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
     this.game.input.gamepad.start();
+  }
+
+  shutDown() {
+    for (const sound of soundsToDestroy) {
+      sound.destroy();
+    }
   }
 
   update () {
@@ -285,11 +305,17 @@ export default class extends Phaser.State {
     this.player.tantrumming = true;
     this.player.tantrumTime = this.game.time.totalElapsedSeconds();
     this.player.animObj.animations.play("tantrum");
+    this.screamSound.play(null, null, 0.5);
 
+    let wereAnyScared = false;
     for (const enemy of this.enemies) {
       if (this.distBetween(enemy, this.player) < this.tantrumScareDistance) {
         this.scareEnemy(enemy);
+        wereAnyScared = true;
       }
+    }
+    if (wereAnyScared) {
+      this.panicSound.play(null, null, this.chatterVolume * 1.1);
     }
   }
 
@@ -471,21 +497,19 @@ export default class extends Phaser.State {
   }
 
   checkPlayerFall () {
+    if (this.player.falling) { return; }
     const player = this.player;
     const {x: tileX, y: tileY} = this.nearestTileTo(player.x, player.y);
     if (tileY < 0 || tileY >= this.map.length ||
         tileX < 0 || tileX >= this.map[tileY].length ||
         this.map[tileY][tileX] === null) {
       this.player.falling = true;
+      this.fallSound.play(null, null, 0.5);
       this.calmMusic.fadeTo(2000, 0);
       this.annoyingHum.fadeTo(2000, 0);
       this.chatter.fadeTo(2000, 0);
       this.footstepsSound.stop();
       this.game.time.events.add(Phaser.Timer.SECOND * 5, () => {
-        this.calmMusic.destroy();
-        this.annoyingHum.destroy();
-        this.chatter.destroy();
-        this.footstepsSound.destroy();
         this.game.state.start("Room");
       });
       this.mapZGroup.add(this.player);
@@ -662,6 +686,7 @@ export default class extends Phaser.State {
       tile.destroy();
       for (const crack of tile.crackSprites) {
         crack.destroy();
+        this.crumbleSound.play();
       }
       const {x: tx, y: ty} = this.nearestTileTo(tile.x, tile.y);
       this.map[ty][tx] = null;

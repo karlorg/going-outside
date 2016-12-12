@@ -44,6 +44,10 @@ export default class extends Phaser.State {
     this.load.audio('annoying hum',
                     'assets/sound/get away audio/annoying hum/annoying hum.mp3');
     this.load.audio('footsteps', 'assets/sound/footsteps/footsteps 1.mp3');
+    this.load.audio('scream', 'assets/sound/get away organic 2.mp3');
+    this.load.audio('falling cry', 'assets/sound/falling cry.mp3');
+    this.load.audio('crumble sound', 'assets/sound/floor crumble.mp3');
+    this.load.audio('panic sound', 'assets/sound/other characters running away.mp3');
   }
 
   create () {
