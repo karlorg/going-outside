@@ -130,7 +130,7 @@ export default class extends Phaser.State {
                                {x: 320, y: 320}) > 100) {
             const tree = this.game.add.sprite(
               worldX + (this.game.rnd.between(-3, 3)),
-              worldY, "tree"
+              worldY, this.game.rnd.pick(["tree", "shrub"])
             );
             tree.anchor.setTo(48 / tree.width, 109 / tree.height);
             this.zGroup.add(tree);

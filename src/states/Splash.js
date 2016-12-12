@@ -34,6 +34,7 @@ export default class extends Phaser.State {
     this.load.image('stress pulse', 'assets/images/stress pulse.png');
     this.load.image('dark-border', 'assets/images/dark-border.png');
     this.load.image('tree', 'assets/images/tree.png');
+    this.load.image('shrub', 'assets/images/shrub.png');
 
     this.load.audio('calm music', 'assets/sound/calm track/Full mix.mp3');
     this.load.audio('chatter', 'assets/sound/warning audio/cutsy chatter.mp3');
