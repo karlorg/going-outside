@@ -652,10 +652,13 @@ export default class extends Phaser.State {
     const now = this.game.time.totalElapsedSeconds();
     const dist = this.distToNearestEnemy();
     if (dist > this.darknessMaxDist) { return; }
-    const pulseDelay = this.getScaleBetween(
+    const intensity = this.getScaleBetween(
       dist, this.darknessMinDist, this.darknessMaxDist
-    ) * (this.stressPulseMaxDelay - this.stressPulseMinDelay) +
-    this.stressPulseMinDelay;
+    );
+    const pulseDelay =
+      intensity *
+      (this.stressPulseMaxDelay - this.stressPulseMinDelay) +
+      this.stressPulseMinDelay;
     if (now < this.lastPulseTime + pulseDelay) { return; }
 
     this.lastPulseTime = now;
@@ -663,6 +666,7 @@ export default class extends Phaser.State {
       this.player.x, this.player.y, "stress pulse"
     );
     this.mapZGroup.add(pulse);
+    pulse.alpha = 1 - intensity * 0.7;
     pulse.anchor.setTo(0.5, 0.5);
     pulse.scale.setTo(0.2);
     this.game.add.tween(pulse).to(
