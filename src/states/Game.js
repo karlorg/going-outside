@@ -533,6 +533,9 @@ export default class extends Phaser.State {
       this.annoyingHum.fadeTo(2000, 0);
       this.chatter.fadeTo(2000, 0);
       this.footstepsSound.stop();
+      this.game.time.events.add(Phaser.Timer.SECOND * 2, () => {
+        this.game.camera.fade(0x000000, 3000, true);
+      });
       this.game.time.events.add(Phaser.Timer.SECOND * 5, () => {
         this.game.state.start("Room");
       });

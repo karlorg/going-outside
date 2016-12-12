@@ -43,6 +43,14 @@ export default class extends Phaser.State {
     this.player.fallRate = 0;
     this.player.lastFacing = "down";
 
+    this.audioToggle = this.game.add.button(640, 640, "audio toggle", () => {
+      this.game.sound.mute = !this.game.sound.mute;
+    });
+    this.audioToggle.anchor.setTo(1, 1);
+    this.audioToggle.fixedToCamera = true;
+    this.audioToggle.animations.add("on", [0, 1], 2, true);
+    this.audioToggle.animations.add("off", [2, 3], 2, true);
+
     this.game.input.gamepad.start();
   }
 
@@ -50,6 +58,7 @@ export default class extends Phaser.State {
 
   update() {
     this.movePlayer();
+    this.updateAudioToggle();
   }
 
   addBallfolkAnims(sprite) {
@@ -161,6 +170,14 @@ export default class extends Phaser.State {
           sprite.animations.play("standDown");
           break;
       }
+    }
+  }
+
+  updateAudioToggle() {
+    if (this.game.sound.mute) {
+      this.audioToggle.animations.play("off");
+    } else {
+      this.audioToggle.animations.play("on");
     }
   }
 
