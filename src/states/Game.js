@@ -124,14 +124,26 @@ export default class extends Phaser.State {
         if (row % 2 === 1) { x += 32; }
         // maybe spawn a tree
         if (this.game.rnd.frac() < 0.1) {
-          const tree = this.game.add.sprite(x + 32, y + 16,
-                                            "palm01");
-          tree.anchor.setTo(130 / tree.width, 104 / tree.height);
-          this.zGroup.add(tree);
-          this.trees.push(tree);
+          const worldX = x + 32;
+          const worldY = y + 16;
+          if (this.distBetween({x: worldX, y: worldY},
+                               {x: 320, y: 320}) > 100) {
+            const tree = this.game.add.sprite(worldX, worldY, "palm01");
+              tree.anchor.setTo(130 / tree.width, 104 / tree.height);
+              this.zGroup.add(tree);
+              this.trees.push(tree);
+          }
         }
       }
     }
+
+    const door = this.game.add.sprite(320-64, 320-32, "door");
+    door.anchor.setTo(0.5, 70/83);
+    this.game.time.events.add(Phaser.Timer.SECOND * 1, () => {
+      this.game.add.tween(door).to(
+        { alpha: 0 }, 1500, Phaser.Easing.Default, true
+      );
+    });
 
     // create player
     this.player = this.game.add.sprite(320, 320);

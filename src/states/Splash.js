@@ -18,6 +18,7 @@ export default class extends Phaser.State {
     this.load.image('room', 'assets/images/room.png');
     this.load.image('roommid', 'assets/images/room midground.png');
     this.load.image('roomfg', 'assets/images/room foreground.png');
+    this.load.image('door', 'assets/images/door.png');
     this.load.spritesheet('wasd', 'assets/images/wasd.png', 128, 128);
     this.load.spritesheet(
       'shiftspace', 'assets/images/shiftspace.png', 128, 128);

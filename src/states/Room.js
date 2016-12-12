@@ -38,6 +38,7 @@ export default class extends Phaser.State {
     // misc player stuff
     this.player.falling = false;
     this.player.lastFacing = "down";
+    this.isLeaving = false;
     this.startPlayerFall();
 
     const roommid = this.game.add.sprite(324, 315, "roommid");
