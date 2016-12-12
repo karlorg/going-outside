@@ -85,7 +85,7 @@ export default class extends Phaser.State {
     this.crackMaxDist = 200;
     this.crackMinDist = 40;
 
-    this.tileMaxCrackLevel = 3;
+    this.tileMaxCrackLevel = 2;
     this.treeRadius = 6;
     this.trees = [];
     this.enemies = [];
@@ -100,11 +100,14 @@ export default class extends Phaser.State {
         let x = i * 64 + 32;
         const y = j * 16 + 16;
         if (j % 2 === 1) { x += 32; }
-        const tile = this.game.add.sprite(x, y, "tile");
+        const tile = this.game.add.sprite(x, y, "animtile");
+        tile.animations.add("0", [0]);
+        tile.animations.add("1", [1, 2, 3], 6);
+        tile.animations.add("2", [4, 5, 6], 6);
+        tile.animations.play("0");
         tile.anchor.setTo(0.5, 0.25);
         tile.lastCracked = this.game.time.totalElapsedSeconds();
         tile.crackLevel = 0;
-        tile.crackSprites = [];
         this.mapZGroup.add(tile);
         row.push(tile);
       }
@@ -324,7 +327,8 @@ export default class extends Phaser.State {
     const pad = this.game.input.gamepad.pad1;
     const keyb = this.game.input.keyboard;
     if (pad.isDown(Phaser.Gamepad.XBOX360_A) ||
-        keyb.isDown(Phaser.Keyboard.SHIFT)) {
+        keyb.isDown(Phaser.Keyboard.SHIFT) ||
+        keyb.isDown(Phaser.Keyboard.SPACEBAR)) {
       this.startTantrum();
       // clear shift-space hint if necessary
       if (!window.ld37.shiftSpaceUnderstood) {
@@ -769,19 +773,10 @@ export default class extends Phaser.State {
     if (tile.crackLevel < this.tileMaxCrackLevel) {
       tile.crackLevel += 1;
       tile.lastCracked = this.game.time.totalElapsedSeconds();
-      // (tile.y+1) is a hack to make z-sorting mostly work
-      const crack = this.game.add.sprite(
-        tile.x, tile.y + 1, `crack${tile.crackLevel}`
-      );
-      crack.anchor.setTo(0.5, ((crack.height / 4) + 1) / crack.height);
-      tile.crackSprites.push(crack);
-      this.mapZGroup.add(crack);
+      tile.animations.play(`${tile.crackLevel}`);
     } else {
       tile.destroy();
-      for (const crack of tile.crackSprites) {
-        crack.destroy();
-        this.crumbleSound.play();
-      }
+      this.crumbleSound.play();
       const {x: tx, y: ty} = this.nearestTileTo(tile.x, tile.y);
       this.map[ty][tx] = null;
     }
